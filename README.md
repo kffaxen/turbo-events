@@ -1,2 +1,2 @@
 # turbo-events
-A fast event generator
+A fast and extensible event generator.
