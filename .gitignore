@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+TurboEvents
+
+# Makefiles (we use cmake, so Makefile is generated)
+Makefile
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles
