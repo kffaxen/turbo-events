@@ -1,1 +1,3 @@
 BasedOnStyle: LLVM
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
