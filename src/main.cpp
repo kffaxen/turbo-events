@@ -1,4 +1,6 @@
+#include "turboevents.h"
+
 int main(int argc, char **argv) {
   // This program does very little.
-  return 0;
+  return turbo(0);
 }

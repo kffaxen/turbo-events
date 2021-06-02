@@ -5,3 +5,4 @@ project(TurboEvents)
 
 # add the source directory so that cmake can find it
 add_subdirectory(src)
+add_subdirectory(lib)
