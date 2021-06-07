@@ -1,2 +1,2 @@
 # add the executable
-add_executable(TurboEvents main.cpp)
+add_executable(turboevents main.cpp)
