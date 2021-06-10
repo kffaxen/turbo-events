@@ -7,7 +7,7 @@ namespace TurboEvents {
 class TurboEvents {
 public:
   /// Simple constructor
-  TurboEvents(void);
+  TurboEvents();
 };
 
 } // namespace TurboEvents

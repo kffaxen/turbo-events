@@ -4,6 +4,6 @@
 
 namespace TurboEvents {
 
-TurboEvents::TurboEvents(void) { std::cout << "TurboEvents initialized\n"; }
+TurboEvents::TurboEvents() { std::cout << "TurboEvents initialized\n"; }
 
 } // namespace TurboEvents
