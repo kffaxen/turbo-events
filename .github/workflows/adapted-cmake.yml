@@ -26,7 +26,7 @@ jobs:
       # Install the tools we need
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build cmake clang-format-11 ccache libgflags-dev
+        sudo apt-get install -y ninja-build cmake clang-tidy-12 ccache libgflags-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
