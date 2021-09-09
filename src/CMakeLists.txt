@@ -5,6 +5,7 @@ set_target_properties(turboevents_main PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
+    CXX_CLANG_TIDY "${CLANG_TIDY_EXE}"
 )
 
 #set the name of the program
