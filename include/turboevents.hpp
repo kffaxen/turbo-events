@@ -1,5 +1,5 @@
-#ifndef TURBOEVENTS_H
-#define TURBOEVENTS_H
+#ifndef TURBOEVENTS_HPP
+#define TURBOEVENTS_HPP
 
 namespace TurboEvents {
 
