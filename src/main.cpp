@@ -10,6 +10,8 @@ int main(int argc, char **argv) {
   // This program does very little.
   TurboEvents::TurboEvents turbo;
 
+  x = ;
+
   gflags::ShutDownCommandLineFlags();
   return 0;
 }
