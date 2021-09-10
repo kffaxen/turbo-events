@@ -22,6 +22,16 @@ if(CLANG_TIDY)
     endif()
 endif()
 
+option(DOXYGEN "Generate doxygen documentation." ON)
+
+if(DOXYGEN)
+    find_package(Doxygen
+        REQUIRED dot
+        OPTIONAL_COMPONENTS mscgen dia
+    )
+    doxygen_add_docs(doxygen ${PROJECT_SOURCE_DIR} ALL)
+endif()
+
 # add the source, library and include directories so that cmake can find them
 add_subdirectory(src)
 add_subdirectory(lib)
