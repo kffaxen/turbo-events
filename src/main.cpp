@@ -7,8 +7,7 @@ int main(int argc, char **argv) {
   gflags::SetVersionString("0.1");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  // This program does very little.
-  TurboEvents::TurboEvents turbo;
+  auto turbo = TurboEvents::TurboEvents::create();
 
   gflags::ShutDownCommandLineFlags();
   return 0;
