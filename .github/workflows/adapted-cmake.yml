@@ -28,7 +28,7 @@ jobs:
       # Install the tools we need
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build cmake clang-tidy-12 ccache libgflags-dev graphviz doxygen
+        sudo apt-get install -y ninja-build cmake clang-tidy-12 ccache libgflags-dev graphviz doxygen libxerces-c-dev
 
     - name: Check code formatting
       run: |
