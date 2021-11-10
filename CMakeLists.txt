@@ -40,6 +40,10 @@ if(DOXYGEN)
         OPTIONAL_COMPONENTS mscgen dia
     )
     doxygen_add_docs(doxygen ${PROJECT_SOURCE_DIR} ALL)
+    # Doxygen is developer documentation for us, only build for debug builds.
+    # I cannot get the "ALL" in the previous line from a generator expression
+    # so toggle the target properties now that we have a target.
+    set_target_properties(doxygen PROPERTIES EXCLUDE_FROM_ALL $<CONFIG:Release>)
 endif()
 
 # add the source, library and include directories so that cmake can find them
