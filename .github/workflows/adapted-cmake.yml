@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ master ]
 
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
-
 jobs:
   build:
     # The CMake configure and build commands are platform agnostic and should work equally
@@ -28,7 +24,8 @@ jobs:
       # Install the tools we need
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build cmake clang-tidy-12 ccache libgflags-dev graphviz doxygen libxerces-c-dev
+        sudo apt-get install -y ninja-build clang-tidy-12 ccache libgflags-dev graphviz doxygen libxerces-c-dev
+        sudo snap install cmake --classic
 
     - name: Check code formatting
       run: |
@@ -40,17 +37,16 @@ jobs:
         exit 1
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -G "Ninja Multi-Config"
 
     - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: |
+        cmake --build ${{github.workspace}}/build --config Debug
+        cmake --build ${{github.workspace}}/build --config Release
 
     - name: Test
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+      run: ctest -C Release
       
