@@ -39,6 +39,10 @@ if(DOXYGEN)
         REQUIRED dot
         OPTIONAL_COMPONENTS mscgen dia
     )
+    # Configure Doxygen
+    set(DOXYGEN_QUIET YES)
+    set(DOXYGEN_WARN_AS_ERROR YES)
+    # Construct the build target according to the configuration.
     doxygen_add_docs(doxygen ${PROJECT_SOURCE_DIR} ALL)
     # Doxygen is developer documentation for us, only build for debug builds.
     # I cannot get the "ALL" in the previous line from a generator expression
