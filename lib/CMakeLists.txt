@@ -8,3 +8,10 @@ set_target_properties(turboevents PROPERTIES
 )
 
 target_include_directories(turboevents PUBLIC ${TurboEvents_SOURCE_DIR}/include)
+
+if(COMPILER_HAS_UBSAN)
+    target_compile_options(turboevents PUBLIC
+        $<$<CONFIG:Debug>:-fsanitize=undefined,address>)
+    target_link_options(turboevents PUBLIC
+        $<$<CONFIG:Debug>:-fsanitize=undefined,address>)
+endif()
