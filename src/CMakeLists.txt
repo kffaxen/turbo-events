@@ -13,6 +13,11 @@ set_target_properties(turboevents_main PROPERTIES OUTPUT_NAME turboevents)
 
 target_link_libraries(turboevents_main PRIVATE turboevents)
 
+target_compile_options(turboevents_main PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
+)
+
 find_package(gflags COMPONENTS nothreads_static)
 target_link_libraries(turboevents_main PRIVATE gflags)
 
