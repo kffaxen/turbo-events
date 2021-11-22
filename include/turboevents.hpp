@@ -7,23 +7,28 @@
 namespace TurboEvents {
 
 /// A type for events with time stamps
-template <class T> struct Event {
+struct Event {
   /// The time stamp of the event
   std::chrono::system_clock::time_point time;
-  /// The event data
-  T val;
+  /// Function to call when the time is right
+  virtual void trigger(void) = 0;
 };
 
 /// A class for event streams
-template <class T> class EventStream {
+class EventStream {
 public:
   /// Get next event
-  inline Event<T> getNext(void) { return next; }
-  /// Generate the next event and write it to next
-  virtual void generate(void) = 0;
+  inline std::unique_ptr<Event> getNext(void) { return std::move(next); }
+
+  /// Generate the next event and write it to next returning true if an event
+  /// was found
+  virtual bool generate(void) = 0;
+
+  /// The time stamp of the first event
+  std::chrono::system_clock::time_point time;
 
 private:
-  Event<T> next;
+  std::unique_ptr<Event> next;
 };
 
 /// A class encapsulating an event generator
