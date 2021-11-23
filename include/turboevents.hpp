@@ -3,22 +3,31 @@
 
 #include <chrono>
 #include <memory>
+#include <queue>
+#include <vector>
 
 namespace TurboEvents {
 
 /// A type for events with time stamps
 struct Event {
+  /// Constructor
+  Event(std::chrono::system_clock::time_point t) : time(t) {}
+  /// Virtual destructor
+  virtual ~Event(){};
   /// The time stamp of the event
-  std::chrono::system_clock::time_point time;
+  const std::chrono::system_clock::time_point time;
   /// Function to call when the time is right
-  virtual void trigger() = 0;
+  virtual void trigger() const = 0;
 };
 
-/// A class for event streams
+/// A class for event streams where the events of the stream are delivered in
+/// order
 class EventStream {
 public:
+  /// Constructor
+  EventStream(Event *e) : next(e) {}
   /// Get next event
-  std::unique_ptr<Event> getNext() { return std::move(next); }
+  Event *getNext() const { return next; }
 
   /// Generate the next event and write it to next returning true if an event
   /// was found
@@ -27,8 +36,9 @@ public:
   /// The time stamp of the first event
   std::chrono::system_clock::time_point time;
 
-private:
-  std::unique_ptr<Event> next;
+protected:
+  /// The next event
+  Event *next;
 };
 
 /// A class encapsulating an event generator
@@ -38,6 +48,21 @@ public:
   TurboEvents();
   /// Create a new TurboEvents object.
   static std::unique_ptr<TurboEvents> create();
+
+  /// Add an event stream
+  void addEventStream(EventStream *s);
+
+  /// Run the event streams added so far
+  void run();
+
+private:
+  /// Compare EventStream objects based on time
+  static bool lessES(const EventStream *a, const EventStream *b);
+
+  /// Priority queue containing EventStreams
+  std::priority_queue<EventStream *, std::vector<EventStream *>,
+                      decltype(&lessES)>
+      q;
 };
 
 } // namespace TurboEvents
