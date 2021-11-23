@@ -11,18 +11,18 @@ struct Event {
   /// The time stamp of the event
   std::chrono::system_clock::time_point time;
   /// Function to call when the time is right
-  virtual void trigger(void) = 0;
+  virtual void trigger() = 0;
 };
 
 /// A class for event streams
 class EventStream {
 public:
   /// Get next event
-  inline std::unique_ptr<Event> getNext(void) { return std::move(next); }
+  std::unique_ptr<Event> getNext() { return std::move(next); }
 
   /// Generate the next event and write it to next returning true if an event
   /// was found
-  virtual bool generate(void) = 0;
+  virtual bool generate() = 0;
 
   /// The time stamp of the first event
   std::chrono::system_clock::time_point time;
