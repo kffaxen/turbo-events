@@ -13,7 +13,7 @@ struct Event {
   /// Constructor
   Event(std::chrono::system_clock::time_point t) : time(t) {}
   /// Virtual destructor
-  virtual ~Event(){};
+  virtual ~Event() {}
   /// The time stamp of the event
   const std::chrono::system_clock::time_point time;
   /// Function to call when the time is right
