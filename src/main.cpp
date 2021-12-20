@@ -63,8 +63,8 @@ int main(int argc, char **argv) {
 
   SimpleEventStream es(5);
   SimpleEventStream fs(2, 1500);
-  turbo->addEventStream(&es);
-  turbo->addEventStream(&fs);
+  turbo->addEventStream(es);
+  turbo->addEventStream(fs);
   turbo->run();
 
   XMLPlatformUtils::Terminate();
