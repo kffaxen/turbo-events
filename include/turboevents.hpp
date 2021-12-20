@@ -50,7 +50,7 @@ public:
   static std::unique_ptr<TurboEvents> create();
 
   /// Add an event stream
-  void addEventStream(EventStream *s);
+  void addEventStream(EventStream &s);
 
   /// Run the event streams added so far
   void run();

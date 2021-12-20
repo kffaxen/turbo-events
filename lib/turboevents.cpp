@@ -17,7 +17,7 @@ std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEvents>();
 }
 
-void TurboEvents::addEventStream(EventStream *s) { q.push(s); }
+void TurboEvents::addEventStream(EventStream &s) { q.push(&s); }
 
 void TurboEvents::run() {
   while (!q.empty()) {
