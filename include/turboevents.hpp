@@ -57,11 +57,13 @@ public:
 
 private:
   /// Compare EventStream objects based on time
-  static bool lessES(const EventStream *a, const EventStream *b);
+  static bool greaterES(const EventStream *a, const EventStream *b) {
+    return a->time > b->time;
+  }
 
   /// Priority queue containing EventStreams
   std::priority_queue<EventStream *, std::vector<EventStream *>,
-                      decltype(&lessES)>
+                      decltype(&greaterES)>
       q;
 };
 

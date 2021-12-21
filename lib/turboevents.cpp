@@ -5,11 +5,7 @@
 
 namespace TurboEvents {
 
-bool TurboEvents::lessES(const EventStream *a, const EventStream *b) {
-  return a->time > b->time;
-}
-
-TurboEvents::TurboEvents() : q(lessES) {
+TurboEvents::TurboEvents() : q(greaterES) {
   std::cout << "TurboEvents initialized\n";
 }
 
