@@ -1,13 +1,18 @@
 #include "turboevents.hpp"
+#include "IO/XMLInput.hpp"
 
 #include <iostream>
 #include <thread>
 
 namespace TurboEvents {
 
+static XMLInput xmlInput;
+
 TurboEvents::TurboEvents() : q(greaterES) {
   std::cout << "TurboEvents initialized\n";
 }
+
+TurboEvents::~TurboEvents() {}
 
 std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEvents>();

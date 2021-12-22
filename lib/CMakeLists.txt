@@ -20,3 +20,5 @@ if(COMPILER_HAS_UBSAN)
     target_link_options(turboevents PUBLIC
         $<$<CONFIG:Debug>:-fsanitize=undefined,address>)
 endif()
+
+add_subdirectory(IO)
