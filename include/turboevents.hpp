@@ -49,6 +49,9 @@ public:
   /// Create a new TurboEvents object.
   static std::unique_ptr<TurboEvents> create();
 
+  /// Virtual destructor
+  virtual ~TurboEvents();
+
   /// Add an event stream
   void addEventStream(EventStream &s);
 
