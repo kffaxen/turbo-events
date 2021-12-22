@@ -1,4 +1,4 @@
-add_library(turboevents turboevents.cpp)
+add_library(turboevents turboevents.cpp IO/TurboXML.cpp)
 
 set_target_properties(turboevents PROPERTIES
     CXX_STANDARD 20

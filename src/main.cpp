@@ -2,9 +2,6 @@
 
 #include <gflags/gflags.h>
 #include <iostream>
-#include <xercesc/util/PlatformUtils.hpp>
-
-using namespace xercesc;
 
 /// Dummy event type
 class SimpleEvent : public TurboEvents::Event {
@@ -53,12 +50,6 @@ int main(int argc, char **argv) {
   gflags::SetVersionString("0.1");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch (const XMLException &e) {
-    return 1;
-  }
-
   auto turbo = TurboEvents::TurboEvents::create();
 
   SimpleEventStream es(5);
@@ -67,7 +58,6 @@ int main(int argc, char **argv) {
   turbo->addEventStream(fs);
   turbo->run();
 
-  XMLPlatformUtils::Terminate();
   gflags::ShutDownCommandLineFlags();
   return 0;
 }

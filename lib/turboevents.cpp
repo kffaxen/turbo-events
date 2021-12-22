@@ -1,13 +1,18 @@
 #include "turboevents.hpp"
+#include "TurboXML.hpp"
 
 #include <iostream>
 #include <thread>
 
 namespace TurboEvents {
 
+static TurboXML turboXML;
+
 TurboEvents::TurboEvents() : q(greaterES) {
   std::cout << "TurboEvents initialized\n";
 }
+
+TurboEvents::~TurboEvents() {}
 
 std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEvents>();
