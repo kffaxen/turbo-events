@@ -26,6 +26,8 @@ class EventStream {
 public:
   /// Constructor
   EventStream(Event *e) : next(e) {}
+  /// Virtual destructor
+  virtual ~EventStream() {}
   /// Get next event
   Event *getNext() const { return next; }
 
@@ -53,7 +55,10 @@ public:
   virtual ~TurboEvents();
 
   /// Add an event stream
-  void addEventStream(EventStream &s);
+  void addEventStream(EventStream *s);
+
+  /// Add one or more event streams from a file
+  void addStreamsFromFile(const char *fileName);
 
   /// Run the event streams added so far
   void run();
