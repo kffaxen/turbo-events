@@ -52,8 +52,10 @@ int main(int argc, char **argv) {
 
   auto turbo = TurboEvents::TurboEvents::create();
 
-  SimpleEventStream es(5);
-  SimpleEventStream fs(2, 1500);
+  for (int i = 1; i < argc; i++) turbo->addStreamsFromFile(argv[i]);
+
+  SimpleEventStream *es = new SimpleEventStream(5);
+  SimpleEventStream *fs = new SimpleEventStream(2, 1500);
   turbo->addEventStream(es);
   turbo->addEventStream(fs);
   turbo->run();

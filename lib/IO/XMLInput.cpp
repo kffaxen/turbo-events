@@ -1,9 +1,15 @@
 #include "XMLInput.hpp"
 
+#include <ctime>
+#include <iomanip>
 #include <iostream>
+#include <xercesc/dom/DOM.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/util/XMLString.hpp>
 
 using namespace xercesc;
+
+namespace TurboEvents {
 
 XMLInput::XMLInput() {
   try {
@@ -15,6 +21,96 @@ XMLInput::XMLInput() {
 }
 
 XMLInput::~XMLInput() {
+  for (auto *parser : openDocs) parser->release();
   XMLPlatformUtils::Terminate();
   std::cout << "XML terminated\n";
 }
+
+void XMLInput::addStreamsFromXMLFile(TurboEvents *turbo, const char *fileName) {
+  XMLCh tempStr[100];
+  XMLString::transcode("LS", tempStr, 99);
+  DOMImplementationLS *impl = static_cast<DOMImplementationLS *>(
+      DOMImplementationRegistry::getDOMImplementation(tempStr));
+  DOMLSParser *parser =
+      impl->createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
+
+  DOMDocument *doc = nullptr;
+
+  try {
+    doc = parser->parseURI(fileName);
+  } catch (const XMLException &toCatch) {
+    char *message = XMLString::transcode(toCatch.getMessage());
+    std::cerr << "Exception message is:\n" << message << "\n";
+    XMLString::release(&message);
+    exit(-1);
+  } catch (const DOMException &toCatch) {
+    char *message = XMLString::transcode(toCatch.msg);
+    std::cerr << "Exception message is:\n" << message << "\n";
+    XMLString::release(&message);
+    exit(-1);
+  } catch (...) {
+    std::cerr << "Unexpected Exception\n";
+    exit(-1);
+  }
+
+  std::cout << "Read and parsed file " << fileName << "\n";
+
+  XMLCh *ns = XMLString::transcode("*");
+  XMLCh *tag = XMLString::transcode("glucose_level");
+
+  auto *myList = doc->getElementsByTagNameNS(ns, tag);
+  XMLString::release(&ns);
+  XMLString::release(&tag);
+
+  for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
+    auto *elem = static_cast<DOMElement *>(myList->item(i));
+
+    XMLCh *eventTag = XMLString::transcode("event");
+    auto *stream = new XMLEventStream(elem->getElementsByTagName(eventTag));
+    XMLString::release(&eventTag);
+
+    turbo->addEventStream(stream);
+  }
+  openDocs.push_back(parser);
+}
+
+void XMLEvent::trigger() const { std::cout << d << "\n"; }
+
+XMLEventStream::XMLEventStream(DOMNodeList *events)
+    : EventStream(nullptr), xmlEvents(events), nextIdx(0) {
+  generate();
+}
+
+bool XMLEventStream::generate() {
+  if (next != nullptr) delete next;
+  if (nextIdx >= xmlEvents->getLength()) return false;
+  DOMNode *node = xmlEvents->item(nextIdx);
+  nextIdx++;
+
+  auto *attrs = node->getAttributes();
+
+  XMLCh *tsAttr = XMLString::transcode("ts");
+  char *timeStamp =
+      XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
+  XMLString::release(&tsAttr);
+
+  XMLCh *valueAttr = XMLString::transcode("value");
+  char *value =
+      XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
+  XMLString::release(&valueAttr);
+
+  struct tm timeBuf;
+  strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+  XMLString::release(&timeStamp);
+  auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
+
+  next = new XMLEvent(tp, value);
+  // The value string has been converted to a std::string by the call above and
+  // is no longer used.
+  XMLString::release(&value);
+
+  time = next->time;
+  return true;
+}
+
+} // namespace TurboEvents
