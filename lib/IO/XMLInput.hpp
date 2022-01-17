@@ -9,6 +9,24 @@ using namespace xercesc;
 
 namespace TurboEvents {
 
+/// An input class encapsulating an XML input file
+class XMLFileInput : public Input {
+public:
+  /// Constructor
+  XMLFileInput(const char *fileName) : fname(fileName) {}
+  virtual ~XMLFileInput() {}
+
+  void addStreams(
+      std::priority_queue<EventStream *, std::vector<EventStream *>,
+                          decltype(&TurboEvents::greaterES)> &q) override;
+
+  void finish() override;
+
+private:
+  /// The name of the file
+  const char *fname;
+};
+
 /// Placeholder event class
 class XMLEvent : public Event {
 public:
@@ -57,11 +75,16 @@ public:
   virtual ~XMLInput();
 
   /// Open an XML-file and add one or more event streams based on its contents
-  void addStreamsFromXMLFile(TurboEvents *turbo, const char *fileName);
+  void addStreamsFromXMLFile(
+      std::priority_queue<EventStream *, std::vector<EventStream *>,
+                          decltype(&TurboEvents::greaterES)> &q,
+      const char *fileName);
 
 private:
   /// Parser objects for open files
   std::vector<DOMLSParser *> openDocs;
+  /// Event stream objects for open streams.
+  std::vector<XMLEventStream *> streams;
 };
 
 } // namespace TurboEvents

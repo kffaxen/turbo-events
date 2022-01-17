@@ -52,20 +52,17 @@ public:
   TurboEvents();
   /// Create a new TurboEvents object.
   static std::unique_ptr<TurboEvents> create();
+  /// Create a new XML file input.
+  static Input *createXMLFileInput(const char *name);
+  /// Create a new StreamInput object.
+  static Input *createStreamInput(int m, int i = 1000);
 
   /// Virtual destructor
   virtual ~TurboEvents();
 
-  /// Add an event stream
-  void addEventStream(EventStream *s);
-
-  /// Add one or more event streams from a file
-  void addStreamsFromFile(const char *fileName);
-
-  /// Run the event streams added so far
+  /// Run the event generator and process events.
   void run(std::vector<Input *> &input);
 
-private:
   /// Compare EventStream objects based on time
   static bool greaterES(const EventStream *a, const EventStream *b) {
     return a->time > b->time;
@@ -85,46 +82,11 @@ public:
 
   /// A virtual function to add the event streams in the input to the event
   /// generator
-  virtual void addStreams(TurboEvents &turbo) = 0;
-};
-
-/// An input class encapsulating an input file
-class FileInput : public Input {
-public:
-  /// Constructor
-  FileInput(const char *fileName) : fname(fileName) {}
-
-  /// Virtual Destructor
-  virtual ~FileInput() {}
-
-  /// Add the streams contained in the file
-  void addStreams(TurboEvents &turbo) override {
-    turbo.addStreamsFromFile(fname);
-  }
-
-private:
-  /// The name of the file
-  const char *fname;
-};
-
-/// An input class encapsulating a single event stream
-class StreamInput : public Input {
-public:
-  /// Constructor
-  StreamInput(EventStream *s) : stream(s) {}
-
-  /// Virtual Destructor
-  virtual ~StreamInput() {}
-
-  /// Add the stream
-  void addStreams(TurboEvents &turbo) override {
-    turbo.addEventStream(stream);
-    stream = nullptr;
-  }
-
-private:
-  /// The event stream
-  EventStream *stream;
+  virtual void
+  addStreams(std::priority_queue<EventStream *, std::vector<EventStream *>,
+                                 decltype(&TurboEvents::greaterES)> &q) = 0;
+  /// Deallocate resources used by the class.
+  virtual void finish() = 0;
 };
 
 } // namespace TurboEvents
