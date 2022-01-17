@@ -11,6 +11,21 @@ using namespace xercesc;
 
 namespace TurboEvents {
 
+static XMLInput *xmlInput = nullptr;
+
+void XMLFileInput::addStreams(
+    std::priority_queue<EventStream *, std::vector<EventStream *>,
+                        decltype(&TurboEvents::greaterES)> &q) {
+  // First, ensure that the XML system is up and running.
+  if (xmlInput == nullptr) xmlInput = new XMLInput();
+  xmlInput->addStreamsFromXMLFile(q, fname);
+}
+
+void XMLFileInput::finish() {
+  delete xmlInput;
+  xmlInput = nullptr;
+}
+
 XMLInput::XMLInput() {
   try {
     XMLPlatformUtils::Initialize();
@@ -22,11 +37,15 @@ XMLInput::XMLInput() {
 
 XMLInput::~XMLInput() {
   for (auto *parser : openDocs) parser->release();
+  for (auto *stream : streams) delete stream;
   XMLPlatformUtils::Terminate();
   std::cout << "XML terminated\n";
 }
 
-void XMLInput::addStreamsFromXMLFile(TurboEvents *turbo, const char *fileName) {
+void XMLInput::addStreamsFromXMLFile(
+    std::priority_queue<EventStream *, std::vector<EventStream *>,
+                        decltype(&TurboEvents::greaterES)> &q,
+    const char *fileName) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMImplementationLS *impl = static_cast<DOMImplementationLS *>(
@@ -69,7 +88,8 @@ void XMLInput::addStreamsFromXMLFile(TurboEvents *turbo, const char *fileName) {
     auto *stream = new XMLEventStream(elem->getElementsByTagName(eventTag));
     XMLString::release(&eventTag);
 
-    turbo->addEventStream(stream);
+    q.push(stream);
+    streams.push_back(stream);
   }
   openDocs.push_back(parser);
 }

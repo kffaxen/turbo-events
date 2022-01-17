@@ -6,38 +6,89 @@
 
 namespace TurboEvents {
 
-static XMLInput *xmlInput = nullptr;
+/// An input class encapsulating a single event stream
+class StreamInput : public Input {
+public:
+  /// Constructor
+  StreamInput(EventStream *s) : stream(s) {}
+
+  virtual ~StreamInput() {}
+
+  void addStreams(
+      std::priority_queue<EventStream *, std::vector<EventStream *>,
+                          decltype(&TurboEvents::greaterES)> &q) override {
+    q.push(stream);
+  }
+
+  void finish() override { delete stream; }
+
+private:
+  /// The event stream
+  EventStream *stream;
+};
+
+/// Dummy event type
+class SimpleEvent : public Event {
+public:
+  /// Constructor
+  SimpleEvent(int m, std::chrono::system_clock::time_point t)
+      : Event(t), n(m) {}
+
+  /// Destructor
+  virtual ~SimpleEvent() override {}
+
+  /// Trigger
+  void trigger() const override { std::cout << "SimpleEvent " << n << "\n"; }
+
+private:
+  const int n; ///< Value to print
+};
+
+/// Dummy event stream
+class SimpleEventStream : public EventStream {
+public:
+  /// Constructor
+  SimpleEventStream(int m, int i = 1000)
+      : EventStream(nullptr), n(m), interval(i) {
+    (void)generate();
+  }
+
+  /// Generator
+  bool generate() override {
+    if (next != nullptr) delete next;
+    if (n <= 0) return false;
+    next = new SimpleEvent(n, std::chrono::system_clock::now() +
+                                  std::chrono::milliseconds(interval));
+    time = next->time;
+    n--;
+    return true;
+  }
+
+private:
+  int n;              ///< How many events to generate
+  const int interval; ///< Interval in ms between events
+};
 
 TurboEvents::TurboEvents() : q(greaterES) {
   std::cout << "TurboEvents initialized\n";
 }
 
-TurboEvents::~TurboEvents() {
-  if (xmlInput != nullptr) delete xmlInput;
-}
+TurboEvents::~TurboEvents() {}
 
 std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEvents>();
 }
 
-void TurboEvents::addEventStream(EventStream *s) {
-  if (s->getNext() != nullptr)
-    q.push(s);
-  else
-    delete s;
+Input *TurboEvents::createXMLFileInput(const char *name) {
+  return new XMLFileInput(name);
 }
 
-void TurboEvents::addStreamsFromFile(const char *fileName) {
-  // For now we assume it is an XML file
-  // First, ensure that the XML system is up and running
-  if (xmlInput == nullptr) {
-    xmlInput = new XMLInput();
-  }
-  xmlInput->addStreamsFromXMLFile(this, fileName);
+Input *TurboEvents::createStreamInput(int m, int i) {
+  return new StreamInput(new SimpleEventStream(m, i));
 }
 
 void TurboEvents::run(std::vector<Input *> &inputs) {
-  for (Input *input : inputs) input->addStreams(*this);
+  for (Input *input : inputs) input->addStreams(q);
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();
@@ -45,10 +96,9 @@ void TurboEvents::run(std::vector<Input *> &inputs) {
     es->getNext()->trigger();
     if (es->generate())
       q.push(es); // Push the stream back on the queue if there are more events
-    else
-      delete es; // Delete the stream when there are no more events
   }
   for (Input *input : inputs) {
+    input->finish();
     delete input;
   }
 }
