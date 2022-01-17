@@ -14,8 +14,9 @@ namespace TurboEvents {
 static XMLInput *xmlInput = nullptr;
 
 void XMLFileInput::addStreams(
-    std::priority_queue<EventStream *, std::vector<EventStream *>,
-                        decltype(&TurboEvents::greaterES)> &q) {
+    std::priority_queue<
+        EventStream *, std::vector<EventStream *>,
+        std::function<bool(const EventStream *, const EventStream *)>> &q) {
   // First, ensure that the XML system is up and running.
   if (xmlInput == nullptr) xmlInput = new XMLInput();
   xmlInput->addStreamsFromXMLFile(q, fname);
@@ -43,8 +44,9 @@ XMLInput::~XMLInput() {
 }
 
 void XMLInput::addStreamsFromXMLFile(
-    std::priority_queue<EventStream *, std::vector<EventStream *>,
-                        decltype(&TurboEvents::greaterES)> &q,
+    std::priority_queue<
+        EventStream *, std::vector<EventStream *>,
+        std::function<bool(const EventStream *, const EventStream *)>> &q,
     const char *fileName) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);

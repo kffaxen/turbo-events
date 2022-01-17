@@ -1,5 +1,5 @@
-#include "turboevents.hpp"
 #include "IO/XMLInput.hpp"
+#include "turboevents-internal.hpp"
 
 #include <iostream>
 #include <thread>
@@ -14,9 +14,10 @@ public:
 
   virtual ~StreamInput() {}
 
-  void addStreams(
-      std::priority_queue<EventStream *, std::vector<EventStream *>,
-                          decltype(&TurboEvents::greaterES)> &q) override {
+  void addStreams(std::priority_queue<
+                  EventStream *, std::vector<EventStream *>,
+                  std::function<bool(const EventStream *, const EventStream *)>>
+                      &q) override {
     q.push(stream);
   }
 

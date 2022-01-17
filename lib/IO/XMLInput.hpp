@@ -3,7 +3,7 @@
 
 #include <xercesc/dom/DOM.hpp>
 
-#include "turboevents.hpp"
+#include "turboevents-internal.hpp"
 
 using namespace xercesc;
 
@@ -16,9 +16,10 @@ public:
   XMLFileInput(const char *fileName) : fname(fileName) {}
   virtual ~XMLFileInput() {}
 
-  void addStreams(
-      std::priority_queue<EventStream *, std::vector<EventStream *>,
-                          decltype(&TurboEvents::greaterES)> &q) override;
+  void addStreams(std::priority_queue<
+                  EventStream *, std::vector<EventStream *>,
+                  std::function<bool(const EventStream *, const EventStream *)>>
+                      &q) override;
 
   void finish() override;
 
@@ -76,8 +77,9 @@ public:
 
   /// Open an XML-file and add one or more event streams based on its contents
   void addStreamsFromXMLFile(
-      std::priority_queue<EventStream *, std::vector<EventStream *>,
-                          decltype(&TurboEvents::greaterES)> &q,
+      std::priority_queue<
+          EventStream *, std::vector<EventStream *>,
+          std::function<bool(const EventStream *, const EventStream *)>> &q,
       const char *fileName);
 
 private:
