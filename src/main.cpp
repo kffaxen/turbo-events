@@ -68,10 +68,6 @@ int main(int argc, char **argv) {
 
   turbo->run(inputs);
 
-  for (auto *input : inputs) {
-    delete input;
-  }
-
   gflags::ShutDownCommandLineFlags();
   return 0;
 }

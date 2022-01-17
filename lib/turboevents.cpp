@@ -48,6 +48,9 @@ void TurboEvents::run(std::vector<Input *> &inputs) {
     else
       delete es; // Delete the stream when there are no more events
   }
+  for (Input *input : inputs) {
+    delete input;
+  }
 }
 
 } // namespace TurboEvents
