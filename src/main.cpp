@@ -52,13 +52,25 @@ int main(int argc, char **argv) {
 
   auto turbo = TurboEvents::TurboEvents::create();
 
-  for (int i = 1; i < argc; i++) turbo->addStreamsFromFile(argv[i]);
+  std::vector<TurboEvents::Input *> inputs = {};
+
+  for (int i = 1; i < argc; i++)
+    inputs.push_back(new TurboEvents::FileInput(argv[i]));
 
   SimpleEventStream *es = new SimpleEventStream(5);
   SimpleEventStream *fs = new SimpleEventStream(2, 1500);
-  turbo->addEventStream(es);
-  turbo->addEventStream(fs);
-  turbo->run();
+
+  auto *esStream = new TurboEvents::StreamInput(es);
+  auto *fsStream = new TurboEvents::StreamInput(fs);
+
+  inputs.push_back(esStream);
+  inputs.push_back(fsStream);
+
+  turbo->run(inputs);
+
+  for (auto *input : inputs) {
+    delete input;
+  }
 
   gflags::ShutDownCommandLineFlags();
   return 0;

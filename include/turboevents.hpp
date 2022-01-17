@@ -43,6 +43,8 @@ protected:
   Event *next;
 };
 
+class Input;
+
 /// A class encapsulating an event generator
 class TurboEvents {
 public:
@@ -61,7 +63,7 @@ public:
   void addStreamsFromFile(const char *fileName);
 
   /// Run the event streams added so far
-  void run();
+  void run(std::vector<Input *> &input);
 
 private:
   /// Compare EventStream objects based on time
@@ -73,6 +75,56 @@ private:
   std::priority_queue<EventStream *, std::vector<EventStream *>,
                       decltype(&greaterES)>
       q;
+};
+
+/// A class encapsulating an input, such as a file
+class Input {
+public:
+  /// Virtual destructor
+  virtual ~Input() {}
+
+  /// A virtual function to add the event streams in the input to the event
+  /// generator
+  virtual void addStreams(TurboEvents &turbo) = 0;
+};
+
+/// An input class encapsulating an input file
+class FileInput : public Input {
+public:
+  /// Constructor
+  FileInput(const char *fileName) : fname(fileName) {}
+
+  /// Virtual Destructor
+  virtual ~FileInput() {}
+
+  /// Add the streams contained in the file
+  void addStreams(TurboEvents &turbo) override {
+    turbo.addStreamsFromFile(fname);
+  }
+
+private:
+  /// The name of the file
+  const char *fname;
+};
+
+/// An input class encapsulating a single event stream
+class StreamInput : public Input {
+public:
+  /// Constructor
+  StreamInput(EventStream *s) : stream(s) {}
+
+  /// Virtual Destructor
+  virtual ~StreamInput() {}
+
+  /// Add the stream
+  void addStreams(TurboEvents &turbo) override {
+    turbo.addEventStream(stream);
+    stream = nullptr;
+  }
+
+private:
+  /// The event stream
+  EventStream *stream;
 };
 
 } // namespace TurboEvents
