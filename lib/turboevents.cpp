@@ -36,7 +36,8 @@ void TurboEvents::addStreamsFromFile(const char *fileName) {
   xmlInput->addStreamsFromXMLFile(this, fileName);
 }
 
-void TurboEvents::run() {
+void TurboEvents::run(std::vector<Input *> &inputs) {
+  for (Input *input : inputs) input->addStreams(*this);
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();
