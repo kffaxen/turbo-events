@@ -66,28 +66,5 @@ private:
   XMLSize_t nextIdx;
 };
 
-/// Class managing the XML handling
-class XMLInput {
-public:
-  /// Constructor
-  XMLInput();
-
-  /// Destructor
-  virtual ~XMLInput();
-
-  /// Open an XML-file and add one or more event streams based on its contents
-  void addStreamsFromXMLFile(
-      std::priority_queue<
-          EventStream *, std::vector<EventStream *>,
-          std::function<bool(const EventStream *, const EventStream *)>> &q,
-      const char *fileName);
-
-private:
-  /// Parser objects for open files
-  std::vector<DOMLSParser *> openDocs;
-  /// Event stream objects for open streams.
-  std::vector<XMLEventStream *> streams;
-};
-
 } // namespace TurboEvents
 #endif
