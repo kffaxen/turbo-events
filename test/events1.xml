@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<patient id="0">
+  <glucose_level>
+    <event ts="12-01-2022 19:41:00" value="100"/>
+    <event ts="13-01-2022  9:38:30" value="102"/>
+  </glucose_level>
+</patient>
