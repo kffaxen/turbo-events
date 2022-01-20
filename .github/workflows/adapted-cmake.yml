@@ -39,14 +39,15 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -G "Ninja Multi-Config"
 
+    # We can build the check target immediately, but building the default
+    # target first allows us to see if the CI fails because of the build
+    # or the test.
     - name: Build
       run: |
         cmake --build ${{github.workspace}}/build --config Debug
         cmake --build ${{github.workspace}}/build --config Release
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C Release
-      
+      run: |
+        cmake --build ${{github.workspace}}/build --config Debug --target check
+        cmake --build ${{github.workspace}}/build --config Release --target check
