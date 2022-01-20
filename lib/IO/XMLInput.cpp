@@ -1,4 +1,5 @@
 #include "XMLInput.hpp"
+#include "IO.hpp"
 
 #include <ctime>
 #include <iomanip>
@@ -119,8 +120,6 @@ void XMLInput::addStreamsFromXMLFile(
   openDocs.push_back(parser);
 }
 
-void XMLEvent::trigger() const { std::cout << d << "\n"; }
-
 XMLEventStream::XMLEventStream(DOMNodeList *events)
     : EventStream(nullptr), xmlEvents(events), nextIdx(0) {
   generate();
@@ -149,7 +148,7 @@ bool XMLEventStream::generate() {
   XMLString::release(&timeStamp);
   auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
 
-  next = new XMLEvent(tp, value);
+  next = makeStringEvent(tp, value);
   // The value string has been converted to a std::string by the call above and
   // is no longer used.
   XMLString::release(&value);
