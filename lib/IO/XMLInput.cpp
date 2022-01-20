@@ -57,14 +57,12 @@ XMLInput::XMLInput() {
   } catch (const XMLException &e) {
     exit(1);
   }
-  std::cout << "XML initialized\n";
 }
 
 XMLInput::~XMLInput() {
   for (auto *parser : openDocs) parser->release();
   for (auto *stream : streams) delete stream;
   XMLPlatformUtils::Terminate();
-  std::cout << "XML terminated\n";
 }
 
 void XMLInput::addStreamsFromXMLFile(
@@ -97,8 +95,6 @@ void XMLInput::addStreamsFromXMLFile(
     std::cerr << "Unexpected Exception\n";
     exit(-1);
   }
-
-  std::cout << "Read and parsed file " << fileName << "\n";
 
   XMLCh *ns = XMLString::transcode("*");
   XMLCh *tag = XMLString::transcode("glucose_level");

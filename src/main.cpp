@@ -1,7 +1,6 @@
 #include "turboevents.hpp"
 
 #include <gflags/gflags.h>
-#include <iostream>
 
 int main(int argc, char **argv) {
   gflags::SetUsageMessage("fast event generator");

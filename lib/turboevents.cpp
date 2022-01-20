@@ -2,7 +2,6 @@
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
 
-#include <iostream>
 #include <thread>
 
 namespace TurboEvents {
@@ -55,9 +54,7 @@ private:
   const int interval; ///< Interval in ms between events
 };
 
-TurboEvents::TurboEvents() : q(greaterES) {
-  std::cout << "TurboEvents initialized\n";
-}
+TurboEvents::TurboEvents() : q(greaterES) {}
 
 TurboEvents::~TurboEvents() {}
 
