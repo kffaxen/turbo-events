@@ -1,3 +1,4 @@
+#include "IO/IO.hpp"
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
 
@@ -28,23 +29,6 @@ private:
   EventStream *stream;
 };
 
-/// Dummy event type
-class SimpleEvent : public Event {
-public:
-  /// Constructor
-  SimpleEvent(int m, std::chrono::system_clock::time_point t)
-      : Event(t), n(m) {}
-
-  /// Destructor
-  virtual ~SimpleEvent() override {}
-
-  /// Trigger
-  void trigger() const override { std::cout << "SimpleEvent " << n << "\n"; }
-
-private:
-  const int n; ///< Value to print
-};
-
 /// Dummy event stream
 class SimpleEventStream : public EventStream {
 public:
@@ -58,8 +42,9 @@ public:
   bool generate() override {
     if (next != nullptr) delete next;
     if (n <= 0) return false;
-    next = new SimpleEvent(n, std::chrono::system_clock::now() +
-                                  std::chrono::milliseconds(interval));
+    next = makeIntEvent(std::chrono::system_clock::now() +
+                            std::chrono::milliseconds(interval),
+                        n);
     time = next->time;
     n--;
     return true;

@@ -28,24 +28,6 @@ private:
   const char *fname;
 };
 
-/// Placeholder event class
-class XMLEvent : public Event {
-public:
-  /// Constructor
-  XMLEvent(std::chrono::system_clock::time_point t, std::string data)
-      : Event(t), d(data) {}
-
-  /// Virtual destructor
-  ~XMLEvent() {}
-
-  /// XML specific implementation of trigger
-  void trigger() const override;
-
-private:
-  /// Event data
-  std::string d;
-};
-
 /// An event stream that is read from an XML file
 class XMLEventStream : public EventStream {
 public:

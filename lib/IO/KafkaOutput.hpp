@@ -1,3 +1,6 @@
+#ifndef KAFKAOUTPUT_HPP
+#define KAFKAOUTPUT_HPP
+
 #include "turboevents-internal.hpp"
 
 namespace TurboEvents {
@@ -12,3 +15,4 @@ class KafkaOutput : public Event {
 };
 
 } // namespace TurboEvents
+#endif
