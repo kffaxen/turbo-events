@@ -32,7 +32,7 @@ private:
 class XMLEventStream : public EventStream {
 public:
   /// Constructor
-  XMLEventStream(DOMNodeList *events);
+  XMLEventStream(std::vector<Event *> events);
 
   /// Destructor
   virtual ~XMLEventStream() {}
@@ -41,11 +41,11 @@ public:
   bool generate() override;
 
 private:
-  /// List of XML events to read from
-  DOMNodeList *xmlEvents;
+  /// The events of this stream
+  std::vector<Event *> eventVec;
 
-  /// Index of next event to deliver
-  XMLSize_t nextIdx;
+  /// Index of next event to generate
+  size_t eventIdx;
 };
 
 } // namespace TurboEvents
