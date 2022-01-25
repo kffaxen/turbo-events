@@ -96,9 +96,12 @@ void XMLInput::addStreamsFromXMLFile(
     exit(-1);
   }
 
+  XMLCh *tsAttr = XMLString::transcode("ts");
+  XMLCh *eventTag = XMLString::transcode("event");
+  XMLCh *valueAttr = XMLString::transcode("value");
+
   XMLCh *ns = XMLString::transcode("*");
   XMLCh *tag = XMLString::transcode("glucose_level");
-
   auto *myList = doc->getElementsByTagNameNS(ns, tag);
   XMLString::release(&ns);
   XMLString::release(&tag);
@@ -106,49 +109,53 @@ void XMLInput::addStreamsFromXMLFile(
   for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
     auto *elem = static_cast<DOMElement *>(myList->item(i));
 
-    XMLCh *eventTag = XMLString::transcode("event");
-    auto *stream = new XMLEventStream(elem->getElementsByTagName(eventTag));
-    XMLString::release(&eventTag);
+    DOMNodeList *xmlEvents = elem->getElementsByTagName(eventTag);
+    std::vector<Event *> events;
 
+    XMLSize_t nElems = xmlEvents->getLength();
+    for (XMLSize_t idx = 0; idx < nElems; idx++) {
+      DOMNode *node = xmlEvents->item(idx);
+
+      auto *attrs = node->getAttributes();
+
+      char *timeStamp =
+          XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
+
+      char *value =
+          XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
+
+      struct tm timeBuf;
+      strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+      XMLString::release(&timeStamp);
+      auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
+
+      events.push_back(makeStringEvent(tp, value));
+      // The value string has been converted to a std::string by the call above
+      // and is no longer used.
+      XMLString::release(&value);
+    }
+    XMLEventStream *stream = new XMLEventStream(std::move(events));
     q.push(stream);
+    events.clear();
     streams.push_back(stream);
   }
+  XMLString::release(&tsAttr);
+  XMLString::release(&eventTag);
+  XMLString::release(&valueAttr);
+
   openDocs.push_back(parser);
 }
 
-XMLEventStream::XMLEventStream(DOMNodeList *events)
-    : EventStream(nullptr), xmlEvents(events), nextIdx(0) {
+XMLEventStream::XMLEventStream(std::vector<Event *> events)
+    : EventStream(nullptr), eventVec(events), eventIdx(0) {
   generate();
 }
 
 bool XMLEventStream::generate() {
   if (next != nullptr) delete next;
-  if (nextIdx >= xmlEvents->getLength()) return false;
-  DOMNode *node = xmlEvents->item(nextIdx);
-  nextIdx++;
-
-  auto *attrs = node->getAttributes();
-
-  XMLCh *tsAttr = XMLString::transcode("ts");
-  char *timeStamp =
-      XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
-  XMLString::release(&tsAttr);
-
-  XMLCh *valueAttr = XMLString::transcode("value");
-  char *value =
-      XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
-  XMLString::release(&valueAttr);
-
-  struct tm timeBuf;
-  strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
-  XMLString::release(&timeStamp);
-  auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
-
-  next = makeStringEvent(tp, value);
-  // The value string has been converted to a std::string by the call above and
-  // is no longer used.
-  XMLString::release(&value);
-
+  if (eventIdx >= eventVec.size()) return false;
+  next = eventVec[eventIdx];
+  eventIdx++;
   time = next->time;
   return true;
 }
