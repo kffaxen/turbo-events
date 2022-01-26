@@ -14,7 +14,7 @@ target_compile_options(turboevents PRIVATE
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
 )
 
-if(COMPILER_HAS_UBSAN)
+if(SANITIZERS AND COMPILER_HAS_UBSAN)
     target_compile_options(turboevents PUBLIC
         $<$<CONFIG:Debug>:-fsanitize=undefined,address>)
     target_link_options(turboevents PUBLIC

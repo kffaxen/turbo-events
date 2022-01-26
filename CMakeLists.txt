@@ -16,6 +16,8 @@ if(CCACHE_PROGRAM)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
 endif()
 
+option(SANITIZERS "Build with Sanitizers." ON)
+
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-fsanitize=undefined COMPILER_HAS_UBSAN)
 # FIXME (CMake 3.19): Add COMPILER_HAS_ASAN check (requires linker flags).
