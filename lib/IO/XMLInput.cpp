@@ -29,8 +29,6 @@ public:
       const char *fileName);
 
 private:
-  /// Parser objects for open files
-  std::vector<DOMLSParser *> openDocs;
   /// Event stream objects for open streams.
   std::vector<XMLEventStream *> streams;
 };
@@ -60,7 +58,6 @@ XMLInput::XMLInput() {
 }
 
 XMLInput::~XMLInput() {
-  for (auto *parser : openDocs) parser->release();
   for (auto *stream : streams) delete stream;
   XMLPlatformUtils::Terminate();
 }
@@ -106,11 +103,11 @@ void XMLInput::addStreamsFromXMLFile(
   XMLString::release(&ns);
   XMLString::release(&tag);
 
+  std::vector<Event *> events;
   for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
     auto *elem = static_cast<DOMElement *>(myList->item(i));
 
     DOMNodeList *xmlEvents = elem->getElementsByTagName(eventTag);
-    std::vector<Event *> events;
 
     for (XMLSize_t idx = 0; idx < xmlEvents->getLength(); ++idx) {
       auto *attrs = xmlEvents->item(idx)->getAttributes();
@@ -139,8 +136,7 @@ void XMLInput::addStreamsFromXMLFile(
   XMLString::release(&tsAttr);
   XMLString::release(&eventTag);
   XMLString::release(&valueAttr);
-
-  openDocs.push_back(parser);
+  parser->release();
 }
 
 XMLEventStream::XMLEventStream(std::vector<Event *> events)
