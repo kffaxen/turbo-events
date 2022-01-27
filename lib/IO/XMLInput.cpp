@@ -112,11 +112,8 @@ void XMLInput::addStreamsFromXMLFile(
     DOMNodeList *xmlEvents = elem->getElementsByTagName(eventTag);
     std::vector<Event *> events;
 
-    XMLSize_t nElems = xmlEvents->getLength();
-    for (XMLSize_t idx = 0; idx < nElems; idx++) {
-      DOMNode *node = xmlEvents->item(idx);
-
-      auto *attrs = node->getAttributes();
+    for (XMLSize_t idx = 0; idx < xmlEvents->getLength(); ++idx) {
+      auto *attrs = xmlEvents->item(idx)->getAttributes();
 
       char *timeStamp =
           XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
