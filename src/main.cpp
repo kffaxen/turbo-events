@@ -9,13 +9,13 @@ int main(int argc, char **argv) {
 
   auto turbo = TurboEvents::TurboEvents::create();
 
-  std::vector<TurboEvents::Input *> inputs;
+  std::vector<std::unique_ptr<TurboEvents::Input>> inputs;
 
   for (int i = 1; i < argc; ++i)
-    inputs.emplace_back(TurboEvents::TurboEvents::createXMLFileInput(argv[i]));
+    inputs.push_back(TurboEvents::TurboEvents::createXMLFileInput(argv[i]));
 
-  inputs.emplace_back(TurboEvents::TurboEvents::createStreamInput(5));
-  inputs.emplace_back(TurboEvents::TurboEvents::createStreamInput(2, 1500));
+  inputs.push_back(TurboEvents::TurboEvents::createStreamInput(5));
+  inputs.push_back(TurboEvents::TurboEvents::createStreamInput(2, 1500));
 
   turbo->run(inputs);
 
