@@ -2,6 +2,7 @@
 #define KAFKAOUTPUT_HPP
 
 #include "turboevents-internal.hpp"
+#include <string>
 
 namespace TurboEvents {
 

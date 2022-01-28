@@ -2,6 +2,7 @@
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
 
+#include <queue>
 #include <thread>
 
 namespace TurboEvents {
@@ -16,11 +17,8 @@ public:
 
   virtual ~StreamInput() {}
 
-  void addStreams(std::priority_queue<
-                  EventStream *, std::vector<EventStream *>,
-                  std::function<bool(const EventStream *, const EventStream *)>>
-                      &q) override {
-    q.push(stream);
+  void addStreams(std::function<void(EventStream *)> push) override {
+    push(stream);
   }
 
   void finish() override { delete stream; }
@@ -80,7 +78,8 @@ void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
       EventStream *, std::vector<EventStream *>,
       std::function<bool(const EventStream *, const EventStream *)>>
       q(greaterES);
-  for (auto &input : inputs) input->addStreams(q);
+  auto push = [&q](EventStream *s) { q.push(s); };
+  for (auto &input : inputs) input->addStreams(push);
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();

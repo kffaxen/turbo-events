@@ -22,11 +22,8 @@ public:
   virtual ~XMLInput();
 
   /// Open an XML-file and add one or more event streams based on its contents
-  void addStreamsFromXMLFile(
-      std::priority_queue<
-          EventStream *, std::vector<EventStream *>,
-          std::function<bool(const EventStream *, const EventStream *)>> &q,
-      const char *fileName);
+  void addStreamsFromXMLFile(std::function<void(EventStream *)> push,
+                             const char *fname);
 
 private:
   /// Event stream objects for open streams.
@@ -35,13 +32,10 @@ private:
 
 static XMLInput *xmlInput = nullptr;
 
-void XMLFileInput::addStreams(
-    std::priority_queue<
-        EventStream *, std::vector<EventStream *>,
-        std::function<bool(const EventStream *, const EventStream *)>> &q) {
+void XMLFileInput::addStreams(std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
   if (xmlInput == nullptr) xmlInput = new XMLInput();
-  xmlInput->addStreamsFromXMLFile(q, fname);
+  xmlInput->addStreamsFromXMLFile(push, fname);
 }
 
 void XMLFileInput::finish() {
@@ -62,11 +56,8 @@ XMLInput::~XMLInput() {
   XMLPlatformUtils::Terminate();
 }
 
-void XMLInput::addStreamsFromXMLFile(
-    std::priority_queue<
-        EventStream *, std::vector<EventStream *>,
-        std::function<bool(const EventStream *, const EventStream *)>> &q,
-    const char *fileName) {
+void XMLInput::addStreamsFromXMLFile(std::function<void(EventStream *)> push,
+                                     const char *fname) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMImplementationLS *impl = static_cast<DOMImplementationLS *>(
@@ -77,7 +68,7 @@ void XMLInput::addStreamsFromXMLFile(
   DOMDocument *doc = nullptr;
 
   try {
-    doc = parser->parseURI(fileName);
+    doc = parser->parseURI(fname);
   } catch (const XMLException &toCatch) {
     char *message = XMLString::transcode(toCatch.getMessage());
     std::cerr << "Exception message is:\n" << message << "\n";
@@ -129,7 +120,7 @@ void XMLInput::addStreamsFromXMLFile(
       XMLString::release(&value);
     }
     XMLEventStream *stream = new XMLEventStream(std::move(events));
-    q.push(stream);
+    push(stream);
     events.clear();
     streams.push_back(stream);
   }

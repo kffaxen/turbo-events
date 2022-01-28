@@ -1,11 +1,8 @@
 #ifndef XMLINPUT_HPP
 #define XMLINPUT_HPP
 
-#include <xercesc/dom/DOM.hpp>
-
 #include "turboevents-internal.hpp"
-
-using namespace xercesc;
+#include "turboevents.hpp"
 
 namespace TurboEvents {
 
@@ -16,10 +13,7 @@ public:
   XMLFileInput(const char *fileName) : fname(fileName) {}
   virtual ~XMLFileInput() {}
 
-  void addStreams(std::priority_queue<
-                  EventStream *, std::vector<EventStream *>,
-                  std::function<bool(const EventStream *, const EventStream *)>>
-                      &q) override;
+  void addStreams(std::function<void(EventStream *)> push) override;
 
   void finish() override;
 
