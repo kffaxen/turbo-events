@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <memory>
-#include <queue>
 #include <vector>
 
 namespace TurboEvents {
@@ -16,12 +15,8 @@ public:
   /// Virtual destructor
   virtual ~Input() = 0;
 
-  /// A virtual function to add the event streams in the input to the event
-  /// generator
-  virtual void addStreams(
-      std::priority_queue<EventStream *, std::vector<EventStream *>,
-                          std::function<bool(const EventStream *,
-                                             const EventStream *)>> &q) = 0;
+  /// Add the event streams in the input to the event generator.
+  virtual void addStreams(std::function<void(EventStream *)> push) = 0;
   /// Deallocate resources used by the class.
   virtual void finish() = 0;
 };

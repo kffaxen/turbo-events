@@ -1,11 +1,7 @@
 #ifndef TURBOEVENTS_INTERNAL_HPP
 #define TURBOEVENTS_INTERNAL_HPP
 
-#include "turboevents.hpp"
 #include <chrono>
-#include <functional>
-#include <queue>
-#include <vector>
 
 namespace TurboEvents {
 
