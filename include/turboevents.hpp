@@ -43,13 +43,6 @@ public:
 
   /// Run the event generator and process events.
   void run(std::vector<std::unique_ptr<Input>> &input);
-
-private:
-  /// Priority queue containing EventStreams
-  std::priority_queue<
-      EventStream *, std::vector<EventStream *>,
-      std::function<bool(const EventStream *, const EventStream *)>>
-      q;
 };
 
 } // namespace TurboEvents

@@ -56,7 +56,7 @@ private:
   const int interval; ///< Interval in ms between events
 };
 
-TurboEvents::TurboEvents() : q(greaterES) {}
+TurboEvents::TurboEvents() {}
 
 TurboEvents::~TurboEvents() {}
 
@@ -73,6 +73,10 @@ std::unique_ptr<Input> TurboEvents::createStreamInput(int m, int i) {
 }
 
 void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
+  std::priority_queue<
+      EventStream *, std::vector<EventStream *>,
+      std::function<bool(const EventStream *, const EventStream *)>>
+      q(greaterES);
   for (auto &input : inputs) input->addStreams(q);
   while (!q.empty()) {
     EventStream *es = q.top();
