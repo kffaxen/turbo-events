@@ -6,6 +6,8 @@
 
 namespace TurboEvents {
 
+Input::~Input() = default;
+
 /// An input class encapsulating a single event stream
 class StreamInput : public Input {
 public:
@@ -62,16 +64,16 @@ std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEvents>();
 }
 
-Input *TurboEvents::createXMLFileInput(const char *name) {
-  return new XMLFileInput(name);
+std::unique_ptr<Input> TurboEvents::createXMLFileInput(const char *name) {
+  return std::make_unique<XMLFileInput>(name);
 }
 
-Input *TurboEvents::createStreamInput(int m, int i) {
-  return new StreamInput(new SimpleEventStream(m, i));
+std::unique_ptr<Input> TurboEvents::createStreamInput(int m, int i) {
+  return std::make_unique<StreamInput>(new SimpleEventStream(m, i));
 }
 
-void TurboEvents::run(std::vector<Input *> &inputs) {
-  for (Input *input : inputs) input->addStreams(q);
+void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
+  for (auto &input : inputs) input->addStreams(q);
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();
@@ -80,10 +82,7 @@ void TurboEvents::run(std::vector<Input *> &inputs) {
     if (es->generate())
       q.push(es); // Push the stream back on the queue if there are more events
   }
-  for (Input *input : inputs) {
-    input->finish();
-    delete input;
-  }
+  for (auto &input : inputs) input->finish();
 }
 
 } // namespace TurboEvents
