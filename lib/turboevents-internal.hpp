@@ -44,11 +44,6 @@ protected:
   Event *next;
 };
 
-/// Compare EventStream objects based on time
-static inline bool greaterES(const EventStream *a, const EventStream *b) {
-  return a->time > b->time;
-}
-
 } // namespace TurboEvents
 
 #endif

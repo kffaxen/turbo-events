@@ -73,6 +73,9 @@ std::unique_ptr<Input> TurboEvents::createStreamInput(int m, int i) {
 }
 
 void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
+  auto greaterES = [](const EventStream *a, const EventStream *b) {
+    return a->time > b->time;
+  };
   std::priority_queue<
       EventStream *, std::vector<EventStream *>,
       std::function<bool(const EventStream *, const EventStream *)>>
