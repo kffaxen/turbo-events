@@ -13,7 +13,8 @@ public:
   XMLFileInput(const char *fileName) : fname(fileName) {}
   virtual ~XMLFileInput() {}
 
-  void addStreams(std::function<void(EventStream *)> push) override;
+  void addStreams(Output &output,
+                  std::function<void(EventStream *)> push) override;
 
   void finish() override;
 
@@ -32,7 +33,7 @@ public:
   virtual ~XMLEventStream() {}
 
   /// Generator
-  bool generate() override;
+  bool generate(Output &output) override;
 
 private:
   /// The events of this stream
