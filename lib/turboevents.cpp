@@ -3,8 +3,11 @@
 #include "IO/KafkaOutput.hpp"
 #include "IO/PrintOutput.hpp"
 #include "IO/XMLInput.hpp"
+#include <pybind11/embed.h>
 #include <queue>
 #include <thread>
+
+namespace py = pybind11;
 
 namespace TurboEvents {
 
@@ -32,6 +35,16 @@ private:
   std::vector<std::unique_ptr<Input>> inputs;
 };
 
+PYBIND11_EMBEDDED_MODULE(TurboEvents, m) {
+  py::class_<TurboEventsImpl>(m, "TurboEvents")
+      .def(py::init())
+      .def("createXMLFileInput", &TurboEventsImpl::createXMLFileInput)
+      .def("createCountDownInput", &TurboEventsImpl::createCountDownInput)
+      .def("setPrintOutput", &TurboEventsImpl::setPrintOutput)
+      .def("setKafkaOutput", &TurboEventsImpl::setKafkaOutput)
+      .def("run", &TurboEventsImpl::run);
+}
+
 TurboEvents::TurboEvents() {}
 
 TurboEvents::~TurboEvents() = default;
@@ -54,6 +67,20 @@ void TurboEventsImpl::setPrintOutput() {
 
 void TurboEventsImpl::setKafkaOutput() {
   output = std::make_unique<KafkaOutput>();
+}
+
+void TurboEvents::runScript(std::string &file) {
+  py::scoped_interpreter guard{};
+
+  py::object scope = py::module_::import("__main__").attr("__dict__");
+  py::eval_file(file, scope);
+}
+
+void TurboEvents::runString(std::string &s) {
+  py::scoped_interpreter guard{};
+
+  py::object scope = py::module_::import("__main__").attr("__dict__");
+  py::exec(s, scope);
 }
 
 void TurboEventsImpl::run() {

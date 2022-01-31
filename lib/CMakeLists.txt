@@ -11,7 +11,8 @@ target_include_directories(turboevents PUBLIC ${TurboEvents_SOURCE_DIR}/include)
 
 target_compile_options(turboevents PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror
+        -fno-omit-frame-pointer>
 )
 
 if(SANITIZERS AND COMPILER_HAS_UBSAN)
@@ -20,5 +21,8 @@ if(SANITIZERS AND COMPILER_HAS_UBSAN)
     target_link_options(turboevents PUBLIC
         $<$<CONFIG:Debug>:-fsanitize=undefined,address>)
 endif()
+
+find_package(pybind11 REQUIRED)
+target_link_libraries(turboevents PUBLIC pybind11::embed)
 
 add_subdirectory(IO)

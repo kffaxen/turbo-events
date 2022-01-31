@@ -15,7 +15,8 @@ target_link_libraries(turboevents_main PRIVATE turboevents)
 
 target_compile_options(turboevents_main PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror
+        -fno-omit-frame-pointer>
 )
 
 find_package(gflags COMPONENTS nothreads_static)

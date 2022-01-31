@@ -2,6 +2,7 @@
 #define TURBOEVENTS_HPP
 
 #include <memory>
+#include <string>
 
 namespace TurboEvents {
 
@@ -24,6 +25,11 @@ public:
 
   /// Virtual destructor
   virtual ~TurboEvents();
+
+  /// Run the file in Python.
+  static void runScript(std::string &file);
+  /// Run the string in Python.
+  static void runString(std::string &s);
 
   /// Run the event generator and process events.
   virtual void run() = 0;

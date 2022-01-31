@@ -24,8 +24,15 @@ jobs:
       # Install the tools we need
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build clang-tidy-12 ccache libgflags-dev graphviz doxygen libxerces-c-dev librdkafka-dev
+        sudo apt-get install -y ninja-build clang-tidy-12 ccache libgflags-dev graphviz doxygen libxerces-c-dev librdkafka-dev python3.8-distutils
         sudo snap install cmake --classic
+        cd ..
+        wget https://github.com/pybind/pybind11/archive/refs/tags/v2.6.2.zip
+        unzip v2.6.2.zip
+        cd pybind11-2.6.2
+        cmake -B build -G Ninja -DPYBIND11_TEST=OFF -DCMAKE_INSTALL_PREFIX=`pwd`/../installed
+        cmake --build build --target install
+        cd ../turbo-events
 
     - name: Check code formatting
       run: |
@@ -37,7 +44,7 @@ jobs:
         exit 1
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -G "Ninja Multi-Config"
+      run: CMAKE_PREFIX_PATH=`pwd`/../installed cmake -B ${{github.workspace}}/build -G "Ninja Multi-Config"
 
     # We can build the check target immediately, but building the default
     # target first allows us to see if the CI fails because of the build
@@ -49,5 +56,6 @@ jobs:
 
     - name: Test
       run: |
+        export PYTHONMALLOC=malloc
         cmake --build ${{github.workspace}}/build --config Debug --target check
         cmake --build ${{github.workspace}}/build --config Release --target check
