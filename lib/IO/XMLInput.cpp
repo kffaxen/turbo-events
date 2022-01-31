@@ -131,9 +131,7 @@ void XMLInput::addStreamsFromXMLFile(std::function<void(EventStream *)> push,
 }
 
 XMLEventStream::XMLEventStream(std::vector<Event *> events)
-    : EventStream(nullptr), eventVec(events), eventIdx(0) {
-  generate();
-}
+    : EventStream(nullptr), eventVec(events), eventIdx(0) {}
 
 bool XMLEventStream::generate() {
   if (next != nullptr) delete next;

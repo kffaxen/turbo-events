@@ -33,9 +33,7 @@ class SimpleEventStream : public EventStream {
 public:
   /// Constructor
   SimpleEventStream(int m, int i = 1000)
-      : EventStream(nullptr), n(m), interval(i) {
-    (void)generate();
-  }
+      : EventStream(nullptr), n(m), interval(i) {}
 
   /// Generator
   bool generate() override {
@@ -78,7 +76,9 @@ void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
       EventStream *, std::vector<EventStream *>,
       std::function<bool(const EventStream *, const EventStream *)>>
       q(greaterES);
-  auto push = [&q](EventStream *s) { q.push(s); };
+  auto push = [&q](EventStream *s) {
+    if (s->generate()) q.push(s);
+  };
   for (auto &input : inputs) input->addStreams(push);
   while (!q.empty()) {
     EventStream *es = q.top();
