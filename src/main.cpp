@@ -9,6 +9,7 @@ int main(int argc, char **argv) {
 
   auto turbo = TurboEvents::TurboEvents::create();
 
+  auto output = TurboEvents::TurboEvents::createPrintOutput();
   std::vector<std::unique_ptr<TurboEvents::Input>> inputs;
 
   for (int i = 1; i < argc; ++i)
@@ -17,7 +18,7 @@ int main(int argc, char **argv) {
   inputs.push_back(TurboEvents::TurboEvents::createStreamInput(5));
   inputs.push_back(TurboEvents::TurboEvents::createStreamInput(2, 1500));
 
-  turbo->run(inputs);
+  turbo->run(*output, inputs);
 
   gflags::ShutDownCommandLineFlags();
   return 0;

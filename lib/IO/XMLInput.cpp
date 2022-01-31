@@ -22,7 +22,8 @@ public:
   virtual ~XMLInput();
 
   /// Open an XML-file and add one or more event streams based on its contents
-  void addStreamsFromXMLFile(std::function<void(EventStream *)> push,
+  void addStreamsFromXMLFile(Output &output,
+                             std::function<void(EventStream *)> push,
                              const char *fname);
 
 private:
@@ -32,10 +33,11 @@ private:
 
 static XMLInput *xmlInput = nullptr;
 
-void XMLFileInput::addStreams(std::function<void(EventStream *)> push) {
+void XMLFileInput::addStreams(Output &output,
+                              std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
   if (xmlInput == nullptr) xmlInput = new XMLInput();
-  xmlInput->addStreamsFromXMLFile(push, fname);
+  xmlInput->addStreamsFromXMLFile(output, push, fname);
 }
 
 void XMLFileInput::finish() {
@@ -56,7 +58,8 @@ XMLInput::~XMLInput() {
   XMLPlatformUtils::Terminate();
 }
 
-void XMLInput::addStreamsFromXMLFile(std::function<void(EventStream *)> push,
+void XMLInput::addStreamsFromXMLFile(Output &output,
+                                     std::function<void(EventStream *)> push,
                                      const char *fname) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
@@ -114,7 +117,7 @@ void XMLInput::addStreamsFromXMLFile(std::function<void(EventStream *)> push,
       XMLString::release(&timeStamp);
       auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
 
-      events.push_back(makeStringEvent(tp, value));
+      events.push_back(output.makeEvent(tp, value));
       // The value string has been converted to a std::string by the call above
       // and is no longer used.
       XMLString::release(&value);
@@ -133,7 +136,7 @@ void XMLInput::addStreamsFromXMLFile(std::function<void(EventStream *)> push,
 XMLEventStream::XMLEventStream(std::vector<Event *> events)
     : EventStream(nullptr), eventVec(events), eventIdx(0) {}
 
-bool XMLEventStream::generate() {
+bool XMLEventStream::generate(Output &) {
   if (next != nullptr) delete next;
   if (eventIdx >= eventVec.size()) return false;
   next = eventVec[eventIdx];

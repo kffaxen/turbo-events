@@ -1,4 +1,5 @@
 #include "IO/IO.hpp"
+#include "IO/PrintOutput.hpp"
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
 
@@ -17,7 +18,7 @@ public:
 
   virtual ~StreamInput() {}
 
-  void addStreams(std::function<void(EventStream *)> push) override {
+  void addStreams(Output &, std::function<void(EventStream *)> push) override {
     push(stream);
   }
 
@@ -36,12 +37,12 @@ public:
       : EventStream(nullptr), n(m), interval(i) {}
 
   /// Generator
-  bool generate() override {
+  bool generate(Output &output) override {
     if (next != nullptr) delete next;
     if (n <= 0) return false;
-    next = makeIntEvent(std::chrono::system_clock::now() +
-                            std::chrono::milliseconds(interval),
-                        n);
+    next = output.makeEvent(std::chrono::system_clock::now() +
+                                std::chrono::milliseconds(interval),
+                            n);
     time = next->time;
     n--;
     return true;
@@ -68,7 +69,12 @@ std::unique_ptr<Input> TurboEvents::createStreamInput(int m, int i) {
   return std::make_unique<StreamInput>(new SimpleEventStream(m, i));
 }
 
-void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
+std::unique_ptr<Output> TurboEvents::createPrintOutput() {
+  return std::make_unique<PrintOutput>();
+}
+
+void TurboEvents::run(Output &output,
+                      std::vector<std::unique_ptr<Input>> &inputs) {
   auto greaterES = [](const EventStream *a, const EventStream *b) {
     return a->time > b->time;
   };
@@ -76,16 +82,16 @@ void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
       EventStream *, std::vector<EventStream *>,
       std::function<bool(const EventStream *, const EventStream *)>>
       q(greaterES);
-  auto push = [&q](EventStream *s) {
-    if (s->generate()) q.push(s);
+  auto push = [&q, &output](EventStream *s) {
+    if (s->generate(output)) q.push(s);
   };
-  for (auto &input : inputs) input->addStreams(push);
+  for (auto &input : inputs) input->addStreams(output, push);
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();
     std::this_thread::sleep_until(es->time);
     es->getNext()->trigger();
-    if (es->generate())
+    if (es->generate(output))
       q.push(es); // Push the stream back on the queue if there are more events
   }
   for (auto &input : inputs) input->finish();
