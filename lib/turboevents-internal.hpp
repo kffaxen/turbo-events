@@ -2,6 +2,7 @@
 #define TURBOEVENTS_INTERNAL_HPP
 
 #include <chrono>
+#include <string>
 
 namespace TurboEvents {
 
@@ -38,6 +39,24 @@ public:
 protected:
   /// The next event
   Event *next;
+};
+
+/// A class encapsulating an output destination
+class Output {
+public:
+  /// Virtual destructor
+  virtual ~Output() = 0;
+
+  /// Virtual function to make an event with a string payload
+  virtual Event *makeEvent(std::chrono::system_clock::time_point,
+                           std::string data) = 0;
+
+  /// Virtual function to make an event with an int payload
+  virtual Event *makeEvent(std::chrono::system_clock::time_point, int data) = 0;
+
+protected:
+  /// Common error handling function
+  void unimp(std::string className, std::string typeName);
 };
 
 } // namespace TurboEvents

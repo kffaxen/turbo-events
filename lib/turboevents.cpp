@@ -91,4 +91,11 @@ void TurboEvents::run(std::vector<std::unique_ptr<Input>> &inputs) {
   for (auto &input : inputs) input->finish();
 }
 
+Output::~Output() = default;
+
+void Output::unimp(std::string className, std::string typeName) {
+  std::cerr << className << "::makeEvent(" << typeName << ") not implemented\n";
+  exit(1);
+}
+
 } // namespace TurboEvents
