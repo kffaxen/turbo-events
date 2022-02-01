@@ -78,9 +78,8 @@ void TurboEvents::run(Output &output,
   auto greaterES = [](const EventStream *a, const EventStream *b) {
     return a->time > b->time;
   };
-  std::priority_queue<
-      EventStream *, std::vector<EventStream *>,
-      std::function<bool(const EventStream *, const EventStream *)>>
+  std::priority_queue<EventStream *, std::vector<EventStream *>,
+                      decltype(greaterES)>
       q(greaterES);
   auto push = [&q, &output](EventStream *s) {
     if (s->generate(output)) q.push(s);
