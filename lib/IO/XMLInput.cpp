@@ -1,5 +1,4 @@
 #include "XMLInput.hpp"
-#include "IO.hpp"
 
 #include <ctime>
 #include <iomanip>
