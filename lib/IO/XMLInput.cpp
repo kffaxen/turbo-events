@@ -136,7 +136,6 @@ XMLEventStream::XMLEventStream(std::vector<Event *> events)
     : EventStream(nullptr), eventVec(events), eventIdx(0) {}
 
 bool XMLEventStream::generate(Output &) {
-  if (next != nullptr) delete next;
   if (eventIdx >= eventVec.size()) return false;
   next = eventVec[eventIdx];
   eventIdx++;

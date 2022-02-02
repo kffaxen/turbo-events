@@ -30,7 +30,9 @@ public:
   XMLEventStream(std::vector<Event *> events);
 
   /// Destructor
-  virtual ~XMLEventStream() {}
+  virtual ~XMLEventStream() {
+    for (auto *e : eventVec) delete e;
+  }
 
   /// Generator
   bool generate(Output &output) override;
