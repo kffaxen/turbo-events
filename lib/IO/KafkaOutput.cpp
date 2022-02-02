@@ -15,7 +15,7 @@ public:
   }
 };
 
-void KafkaOutput::trigger() const {
+void KafkaEvent::trigger() const {
   std::string brokers = "localhost";
   std::string topic = "measurements";
 
