@@ -1,8 +1,8 @@
+#include "turboevents.hpp"
 #include "IO/KafkaOutput.hpp"
 #include "IO/PrintOutput.hpp"
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
-
 #include <queue>
 #include <thread>
 
@@ -63,9 +63,14 @@ public:
   void createXMLFileInput(const char *name) override;
   void createStreamInput(int m, int i) override;
 
-  void run(Output &output) override;
+  void setPrintOutput() override;
+  void setKafkaOutput() override;
+
+  void run() override;
 
 private:
+  /// The output for the run.
+  std::unique_ptr<Output> output;
   /// The input sources for the run.
   std::vector<std::unique_ptr<Input>> inputs;
 };
@@ -78,23 +83,6 @@ std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEventsImpl>();
 }
 
-std::unique_ptr<Output> TurboEvents::createPrintOutput() {
-  return std::make_unique<PrintOutput>();
-}
-
-std::unique_ptr<Output> TurboEvents::createOutput(std::string &s) {
-  std::unique_ptr<Output> output;
-  if (s == "print") {
-    output = std::make_unique<PrintOutput>();
-  } else if (s == "kafka") {
-    output = std::make_unique<KafkaOutput>();
-  } else {
-    std::cerr << "Unsupported output event type: " << s << "\n";
-    exit(1);
-  }
-  return output;
-}
-
 void TurboEventsImpl::createXMLFileInput(const char *name) {
   inputs.push_back(std::make_unique<XMLFileInput>(name));
 }
@@ -103,23 +91,31 @@ void TurboEventsImpl::createStreamInput(int m, int i) {
   inputs.push_back(std::make_unique<StreamInput>(new SimpleEventStream(m, i)));
 }
 
-void TurboEventsImpl::run(Output &output) {
+void TurboEventsImpl::setPrintOutput() {
+  output = std::make_unique<PrintOutput>();
+}
+
+void TurboEventsImpl::setKafkaOutput() {
+  output = std::make_unique<KafkaOutput>();
+}
+
+void TurboEventsImpl::run() {
   auto greaterES = [](const EventStream *a, const EventStream *b) {
     return a->time > b->time;
   };
   std::priority_queue<EventStream *, std::vector<EventStream *>,
                       decltype(greaterES)>
       q(greaterES);
-  auto push = [&q, &output](EventStream *s) {
-    if (s->generate(output)) q.push(s);
+  auto push = [&q, &output = output](EventStream *s) {
+    if (s->generate(*output)) q.push(s);
   };
-  for (auto &input : inputs) input->addStreams(output, push);
+  for (auto &input : inputs) input->addStreams(*output, push);
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();
     std::this_thread::sleep_until(es->time);
     es->getNext()->trigger();
-    if (es->generate(output))
+    if (es->generate(*output))
       q.push(es); // Push the stream back on the queue if there are more events
   }
   for (auto &input : inputs) input->finish();

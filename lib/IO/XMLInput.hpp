@@ -2,7 +2,6 @@
 #define XMLINPUT_HPP
 
 #include "turboevents-internal.hpp"
-#include "turboevents.hpp"
 
 namespace TurboEvents {
 

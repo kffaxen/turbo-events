@@ -2,7 +2,6 @@
 #define PRINTOUTPUT_HPP
 
 #include "turboevents-internal.hpp"
-#include "turboevents.hpp"
 
 #include <iostream>
 
