@@ -53,20 +53,29 @@ private:
   const int interval; ///< Interval in ms between events
 };
 
+/// The real TurboEvents implementation.
+class TurboEventsImpl : public TurboEvents {
+public:
+  /// Constructor.
+  TurboEventsImpl() : inputs() {}
+  ~TurboEventsImpl() {}
+
+  void createXMLFileInput(const char *name) override;
+  void createStreamInput(int m, int i) override;
+
+  void run(Output &output) override;
+
+private:
+  /// The input sources for the run.
+  std::vector<std::unique_ptr<Input>> inputs;
+};
+
 TurboEvents::TurboEvents() {}
 
-TurboEvents::~TurboEvents() {}
+TurboEvents::~TurboEvents() = default;
 
 std::unique_ptr<TurboEvents> TurboEvents::create() {
-  return std::make_unique<TurboEvents>();
-}
-
-std::unique_ptr<Input> TurboEvents::createXMLFileInput(const char *name) {
-  return std::make_unique<XMLFileInput>(name);
-}
-
-std::unique_ptr<Input> TurboEvents::createStreamInput(int m, int i) {
-  return std::make_unique<StreamInput>(new SimpleEventStream(m, i));
+  return std::make_unique<TurboEventsImpl>();
 }
 
 std::unique_ptr<Output> TurboEvents::createPrintOutput() {
@@ -86,8 +95,15 @@ std::unique_ptr<Output> TurboEvents::createOutput(std::string &s) {
   return output;
 }
 
-void TurboEvents::run(Output &output,
-                      std::vector<std::unique_ptr<Input>> &inputs) {
+void TurboEventsImpl::createXMLFileInput(const char *name) {
+  inputs.push_back(std::make_unique<XMLFileInput>(name));
+}
+
+void TurboEventsImpl::createStreamInput(int m, int i) {
+  inputs.push_back(std::make_unique<StreamInput>(new SimpleEventStream(m, i)));
+}
+
+void TurboEventsImpl::run(Output &output) {
   auto greaterES = [](const EventStream *a, const EventStream *b) {
     return a->time > b->time;
   };
