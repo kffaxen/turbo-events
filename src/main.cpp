@@ -2,6 +2,8 @@
 
 #include <gflags/gflags.h>
 
+DEFINE_string(output, "print", "what kind of events to produce");
+
 int main(int argc, char **argv) {
   gflags::SetUsageMessage("fast event generator");
   gflags::SetVersionString("0.1");
@@ -9,7 +11,7 @@ int main(int argc, char **argv) {
 
   auto turbo = TurboEvents::TurboEvents::create();
 
-  auto output = TurboEvents::TurboEvents::createOutput();
+  auto output = TurboEvents::TurboEvents::createOutput(FLAGS_output);
   std::vector<std::unique_ptr<TurboEvents::Input>> inputs;
 
   for (int i = 1; i < argc; ++i)
