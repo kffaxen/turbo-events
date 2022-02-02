@@ -3,11 +3,8 @@
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
 
-#include <gflags/gflags.h>
 #include <queue>
 #include <thread>
-
-DEFINE_string(output, "print", "what kind of events to produce");
 
 namespace TurboEvents {
 
@@ -76,14 +73,14 @@ std::unique_ptr<Output> TurboEvents::createPrintOutput() {
   return std::make_unique<PrintOutput>();
 }
 
-std::unique_ptr<Output> TurboEvents::createOutput() {
+std::unique_ptr<Output> TurboEvents::createOutput(std::string &s) {
   std::unique_ptr<Output> output;
-  if (FLAGS_output == "print") {
+  if (s == "print") {
     output = std::make_unique<PrintOutput>();
-  } else if (FLAGS_output == "kafka") {
+  } else if (s == "kafka") {
     output = std::make_unique<KafkaOutput>();
   } else {
-    std::cerr << "Unsupported output event type: " << FLAGS_output << "\n";
+    std::cerr << "Unsupported output event type: " << s << "\n";
     exit(1);
   }
   return output;
