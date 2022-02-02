@@ -1,3 +1,4 @@
+#include "IO/KafkaOutput.hpp"
 #include "IO/PrintOutput.hpp"
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
@@ -79,6 +80,8 @@ std::unique_ptr<Output> TurboEvents::createOutput() {
   std::unique_ptr<Output> output;
   if (FLAGS_output == "print") {
     output = std::make_unique<PrintOutput>();
+  } else if (FLAGS_output == "kafka") {
+    output = std::make_unique<KafkaOutput>();
   } else {
     std::cerr << "Unsupported output event type: " << FLAGS_output << "\n";
     exit(1);

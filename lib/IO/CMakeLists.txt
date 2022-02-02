@@ -1,7 +1,7 @@
 target_include_directories(turboevents PRIVATE ${TurboEvents_SOURCE_DIR}/lib)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(kafka REQUIRED IMPORTED_TARGET rdkafka)
+pkg_check_modules(kafka REQUIRED IMPORTED_TARGET rdkafka++)
 target_sources(turboevents PRIVATE KafkaOutput.cpp)
 target_link_libraries(turboevents PUBLIC PkgConfig::kafka)
 
