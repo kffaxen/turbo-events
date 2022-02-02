@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
   auto turbo = TurboEvents::TurboEvents::create();
 
-  auto output = TurboEvents::TurboEvents::createPrintOutput();
+  auto output = TurboEvents::TurboEvents::createOutput();
   std::vector<std::unique_ptr<TurboEvents::Input>> inputs;
 
   for (int i = 1; i < argc; ++i)
