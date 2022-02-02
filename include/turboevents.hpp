@@ -57,6 +57,9 @@ public:
   /// Create a new PrintOutput object
   static std::unique_ptr<Output> createPrintOutput();
 
+  /// Create an Output object based on command line flag
+  static std::unique_ptr<Output> createOutput();
+
   /// Virtual destructor
   virtual ~TurboEvents();
 

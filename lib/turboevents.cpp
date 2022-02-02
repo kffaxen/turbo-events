@@ -2,8 +2,11 @@
 #include "IO/XMLInput.hpp"
 #include "turboevents-internal.hpp"
 
+#include <gflags/gflags.h>
 #include <queue>
 #include <thread>
+
+DEFINE_string(output, "print", "what kind of events to produce");
 
 namespace TurboEvents {
 
@@ -70,6 +73,17 @@ std::unique_ptr<Input> TurboEvents::createStreamInput(int m, int i) {
 
 std::unique_ptr<Output> TurboEvents::createPrintOutput() {
   return std::make_unique<PrintOutput>();
+}
+
+std::unique_ptr<Output> TurboEvents::createOutput() {
+  std::unique_ptr<Output> output;
+  if (FLAGS_output == "print") {
+    output = std::make_unique<PrintOutput>();
+  } else {
+    std::cerr << "Unsupported output event type: " << FLAGS_output << "\n";
+    exit(1);
+  }
+  return output;
 }
 
 void TurboEvents::run(Output &output,
