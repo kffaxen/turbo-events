@@ -2,11 +2,26 @@
 #define TURBOEVENTS_INTERNAL_HPP
 
 #include <chrono>
+#include <functional>
 #include <string>
 
 namespace TurboEvents {
 
+class EventStream;
 class Output;
+
+/// A class encapsulating an input, such as a file
+class Input {
+public:
+  /// Virtual destructor
+  virtual ~Input() = 0;
+
+  /// Add the event streams in the input to the event generator.
+  virtual void addStreams(Output &output,
+                          std::function<void(EventStream *)> push) = 0;
+  /// Deallocate resources used by the class.
+  virtual void finish() = 0;
+};
 
 /// A type for events with time stamps
 struct Event {

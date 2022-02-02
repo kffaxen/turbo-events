@@ -12,15 +12,12 @@ int main(int argc, char **argv) {
   auto turbo = TurboEvents::TurboEvents::create();
 
   auto output = TurboEvents::TurboEvents::createOutput(FLAGS_output);
-  std::vector<std::unique_ptr<TurboEvents::Input>> inputs;
+  for (int i = 1; i < argc; ++i) turbo->createXMLFileInput(argv[i]);
 
-  for (int i = 1; i < argc; ++i)
-    inputs.push_back(TurboEvents::TurboEvents::createXMLFileInput(argv[i]));
+  turbo->createStreamInput(5);
+  turbo->createStreamInput(2, 1500);
 
-  inputs.push_back(TurboEvents::TurboEvents::createStreamInput(5));
-  inputs.push_back(TurboEvents::TurboEvents::createStreamInput(2, 1500));
-
-  turbo->run(*output, inputs);
+  turbo->run(*output);
 
   gflags::ShutDownCommandLineFlags();
   return 0;
