@@ -15,7 +15,7 @@ public:
   /// Create a new XML file input.
   virtual void createXMLFileInput(const char *name) = 0;
   /// Create a new StreamInput object.
-  virtual void createStreamInput(int m, int i = 1000) = 0;
+  virtual void createCountDownInput(int m, int i = 200) = 0;
 
   /// Set the output to print.
   virtual void setPrintOutput() = 0;
