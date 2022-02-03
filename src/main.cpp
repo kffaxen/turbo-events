@@ -2,7 +2,9 @@
 
 #include <gflags/gflags.h>
 #include <iostream>
+#include <string>
 
+DEFINE_string(input, "", "comma-separated list of algorithmic input streams");
 DEFINE_string(output, "print", "what kind of events to produce");
 
 int main(int argc, char **argv) {
@@ -22,8 +24,10 @@ int main(int argc, char **argv) {
 
   for (int i = 1; i < argc; ++i) turbo->createXMLFileInput(argv[i]);
 
-  turbo->createCountDownInput(5);
-  turbo->createCountDownInput(2, 300);
+  if (FLAGS_input.find("countdown") != std::string::npos) {
+    turbo->createCountDownInput(5);
+    turbo->createCountDownInput(2, 300);
+  }
 
   turbo->run();
 
