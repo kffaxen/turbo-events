@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
 
   for (int i = 1; i < argc; ++i) turbo->createXMLFileInput(argv[i]);
 
-  turbo->createStreamInput(5);
-  turbo->createStreamInput(2, 1500);
+  turbo->createCountDownInput(5);
+  turbo->createCountDownInput(2, 300);
 
   turbo->run();
 

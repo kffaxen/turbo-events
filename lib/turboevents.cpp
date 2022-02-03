@@ -1,57 +1,14 @@
 #include "turboevents.hpp"
+#include "IO/CountDownInput.hpp"
 #include "IO/KafkaOutput.hpp"
 #include "IO/PrintOutput.hpp"
 #include "IO/XMLInput.hpp"
-#include "turboevents-internal.hpp"
 #include <queue>
 #include <thread>
 
 namespace TurboEvents {
 
 Input::~Input() = default;
-
-/// An input class encapsulating a single event stream
-class StreamInput : public Input {
-public:
-  /// Constructor
-  StreamInput(EventStream *s) : stream(s) {}
-
-  virtual ~StreamInput() {}
-
-  void addStreams(Output &, std::function<void(EventStream *)> push) override {
-    push(stream);
-  }
-
-  void finish() override { delete stream; }
-
-private:
-  /// The event stream
-  EventStream *stream;
-};
-
-/// Dummy event stream
-class SimpleEventStream : public EventStream {
-public:
-  /// Constructor
-  SimpleEventStream(int m, int i = 1000)
-      : EventStream(nullptr), n(m), interval(i) {}
-
-  /// Generator
-  bool generate(Output &output) override {
-    if (next != nullptr) delete next;
-    if (n <= 0) return false;
-    next = output.makeEvent(std::chrono::system_clock::now() +
-                                std::chrono::milliseconds(interval),
-                            n);
-    time = next->time;
-    n--;
-    return true;
-  }
-
-private:
-  int n;              ///< How many events to generate
-  const int interval; ///< Interval in ms between events
-};
 
 /// The real TurboEvents implementation.
 class TurboEventsImpl : public TurboEvents {
@@ -61,7 +18,7 @@ public:
   ~TurboEventsImpl() {}
 
   void createXMLFileInput(const char *name) override;
-  void createStreamInput(int m, int i) override;
+  void createCountDownInput(int m, int i) override;
 
   void setPrintOutput() override;
   void setKafkaOutput() override;
@@ -87,8 +44,8 @@ void TurboEventsImpl::createXMLFileInput(const char *name) {
   inputs.push_back(std::make_unique<XMLFileInput>(name));
 }
 
-void TurboEventsImpl::createStreamInput(int m, int i) {
-  inputs.push_back(std::make_unique<StreamInput>(new SimpleEventStream(m, i)));
+void TurboEventsImpl::createCountDownInput(int m, int i) {
+  inputs.push_back(std::make_unique<CountDownInput>(m, i));
 }
 
 void TurboEventsImpl::setPrintOutput() {
