@@ -19,7 +19,7 @@ public:
 
 private:
   /// The name of the file
-  const char *fname;
+  std::string fname;
 };
 
 /// An event stream that is read from an XML file
