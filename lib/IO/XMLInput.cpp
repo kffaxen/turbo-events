@@ -36,7 +36,7 @@ void XMLFileInput::addStreams(Output &output,
                               std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
   if (xmlInput == nullptr) xmlInput = new XMLInput();
-  xmlInput->addStreamsFromXMLFile(output, push, fname);
+  xmlInput->addStreamsFromXMLFile(output, push, fname.c_str());
 }
 
 void XMLFileInput::finish() {
@@ -62,10 +62,10 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
                                      const char *fname) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
-  DOMImplementationLS *impl = static_cast<DOMImplementationLS *>(
-      DOMImplementationRegistry::getDOMImplementation(tempStr));
+  DOMImplementation *impl =
+      DOMImplementationRegistry::getDOMImplementation(tempStr);
   DOMLSParser *parser =
-      impl->createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
+      impl->createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, NULL);
 
   DOMDocument *doc = nullptr;
 
