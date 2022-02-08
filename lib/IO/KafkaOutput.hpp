@@ -10,13 +10,18 @@ namespace TurboEvents {
 class KafkaEvent : public Event {
 public:
   /// Public constructor
-  KafkaEvent(std::chrono::system_clock::time_point t, std::string d)
-      : Event(t), data(d) {}
+  KafkaEvent(std::string broker, std::string top,
+             std::chrono::system_clock::time_point t, std::string d)
+      : Event(t), brokers(broker), topic(top), data(d) {}
 
   /// Implementation of trigger() for Kafka events
   void trigger() const override;
 
 private:
+  /// The brokers for Kafka.
+  std::string brokers;
+  /// The topic to send the data to.
+  std::string topic;
   /// The data to send.
   std::string data;
 };
@@ -24,13 +29,16 @@ private:
 /// Output object that creates Kafka events
 class KafkaOutput : public Output {
 public:
+  /// Constructor.
+  KafkaOutput(std::string broker, std::string top)
+      : brokers(broker), topic(top) {}
   /// Destructor
   virtual ~KafkaOutput() override {}
 
-  /// Make an event that published to a topic
+  /// Make an event that is published to a topic
   Event *makeEvent(std::chrono::system_clock::time_point t,
                    std::string data) override {
-    return new KafkaEvent(t, data);
+    return new KafkaEvent(brokers, topic, t, data);
   }
 
   /// Make an event that prints an int
@@ -38,6 +46,12 @@ public:
     unimp("KafkaOutput", "int");
     return nullptr;
   }
+
+private:
+  /// The brokers for Kafka.
+  std::string brokers;
+  /// The topic to send the data to.
+  std::string topic;
 };
 } // namespace TurboEvents
 #endif

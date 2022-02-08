@@ -8,6 +8,9 @@ DEFINE_string(script, "", "file name for Python script");
 DEFINE_bool(print, false, "print the Python commands and exit");
 DEFINE_string(input, "", "comma-separated list of algorithmic input streams");
 DEFINE_string(output, "print", "what kind of events to produce");
+DEFINE_string(kafka_brokers, "localhost",
+              "comma-separated list of kafka brokers");
+DEFINE_string(kafka_topic, "measurements", "topic to send kafka messages as");
 
 int main(int argc, char **argv) {
   gflags::SetUsageMessage("fast event generator");
@@ -19,7 +22,8 @@ int main(int argc, char **argv) {
   if (FLAGS_output == "print")
     cmds += "t.setPrintOutput()\n";
   else if (FLAGS_output == "kafka")
-    cmds += "t.setKafkaOutput()\n";
+    cmds += "t.setKafkaOutput('" + FLAGS_kafka_brokers + "', '" +
+            FLAGS_kafka_topic + "')\n";
   else {
     std::cerr << "Unknown output: " << FLAGS_output << "\n";
     exit(1);

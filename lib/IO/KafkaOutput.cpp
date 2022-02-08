@@ -16,9 +16,6 @@ public:
 };
 
 void KafkaEvent::trigger() const {
-  std::string brokers = "localhost";
-  std::string topic = "measurements";
-
   std::string errstr;
 
   RdKafka::Conf *c = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
