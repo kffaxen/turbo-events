@@ -114,7 +114,7 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
       char *value =
           XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
 
-      struct tm timeBuf;
+      struct tm timeBuf = {};
       strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
       XMLString::release(&timeStamp);
       auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
