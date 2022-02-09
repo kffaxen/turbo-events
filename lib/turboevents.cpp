@@ -20,7 +20,7 @@ public:
   TurboEventsImpl() : inputs() {}
   ~TurboEventsImpl() {}
 
-  void createXMLFileInput(const char *name) override;
+  void createXMLFileInput(const char *name, bool timeshift) override;
   void createCountDownInput(int m, int i) override;
 
   void setPrintOutput() override;
@@ -53,8 +53,8 @@ std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEventsImpl>();
 }
 
-void TurboEventsImpl::createXMLFileInput(const char *name) {
-  inputs.push_back(std::make_unique<XMLFileInput>(name));
+void TurboEventsImpl::createXMLFileInput(const char *name, bool timeshift) {
+  inputs.push_back(std::make_unique<XMLFileInput>(name, timeshift));
 }
 
 void TurboEventsImpl::createCountDownInput(int m, int i) {
