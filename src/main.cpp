@@ -10,6 +10,10 @@ DEFINE_string(input, "", "comma-separated list of algorithmic input streams");
 DEFINE_string(output, "print", "what kind of events to produce");
 DEFINE_string(kafka_brokers, "localhost",
               "comma-separated list of kafka brokers");
+DEFINE_string(kafka_ca_file, "", "path to ca file");
+DEFINE_string(kafka_certificate_file, "", "path to certificate file");
+DEFINE_string(kafka_key_file, "", "path to key file");
+DEFINE_string(kafka_key_password, "", "password for the key file");
 DEFINE_string(kafka_topic, "measurements", "topic to send kafka messages as");
 DEFINE_bool(timeshift, false,
             "shift time stamps in file inputs to start immediately");
@@ -25,7 +29,9 @@ int main(int argc, char **argv) {
     cmds += "t.setPrintOutput()\n";
   else if (FLAGS_output == "kafka")
     cmds += "t.setKafkaOutput('" + FLAGS_kafka_brokers + "', '" +
-            FLAGS_kafka_topic + "')\n";
+            FLAGS_kafka_ca_file + "', '" + FLAGS_kafka_certificate_file +
+            "', '" + FLAGS_kafka_key_file + "', '" + FLAGS_kafka_key_password +
+            "', '" + FLAGS_kafka_topic + "')\n";
   else {
     std::cerr << "Unknown output: " << FLAGS_output << "\n";
     exit(1);

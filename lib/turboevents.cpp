@@ -24,7 +24,9 @@ public:
   void createCountDownInput(int m, int i) override;
 
   void setPrintOutput() override;
-  void setKafkaOutput(std::string brokers, std::string topic) override;
+  void setKafkaOutput(std::string brokers, std::string caLocation,
+                      std::string certLocation, std::string keyLocation,
+                      std::string keyPwd, std::string topic) override;
 
   void run() override;
 
@@ -65,8 +67,13 @@ void TurboEventsImpl::setPrintOutput() {
   output = std::make_unique<PrintOutput>();
 }
 
-void TurboEventsImpl::setKafkaOutput(std::string brokers, std::string topic) {
-  output = std::make_unique<KafkaOutput>(brokers, topic);
+void TurboEventsImpl::setKafkaOutput(std::string brokers,
+                                     std::string caLocation,
+                                     std::string certLocation,
+                                     std::string keyLocation,
+                                     std::string keyPwd, std::string topic) {
+  output = std::make_unique<KafkaOutput>(brokers, caLocation, certLocation,
+                                         keyLocation, keyPwd, topic);
 }
 
 void TurboEvents::runScript(std::string &file) {

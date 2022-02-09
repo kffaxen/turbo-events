@@ -21,7 +21,9 @@ public:
   /// Set the output to print.
   virtual void setPrintOutput() = 0;
   /// Set the output to Kafka.
-  virtual void setKafkaOutput(std::string brokers, std::string topic) = 0;
+  virtual void setKafkaOutput(std::string brokers, std::string caLocation,
+                              std::string certLocation, std::string keyLocation,
+                              std::string keyPwd, std::string topic) = 0;
 
   /// Virtual destructor
   virtual ~TurboEvents();
