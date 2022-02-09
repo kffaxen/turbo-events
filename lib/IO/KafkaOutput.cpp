@@ -23,6 +23,27 @@ void KafkaEvent::trigger() const {
     std::cerr << errstr << "\n";
     exit(1);
   }
+  if (c->set("security.protocol", "ssl", errstr) != RdKafka::Conf::CONF_OK) {
+    std::cerr << errstr << "\n";
+    exit(1);
+  }
+  if (c->set("ssl.ca.location", caLoc, errstr) != RdKafka::Conf::CONF_OK) {
+    std::cerr << errstr << "\n";
+    exit(1);
+  }
+  if (c->set("ssl.certificate.location", certLoc, errstr) !=
+      RdKafka::Conf::CONF_OK) {
+    std::cerr << errstr << "\n";
+    exit(1);
+  }
+  if (c->set("ssl.key.location", keyLoc, errstr) != RdKafka::Conf::CONF_OK) {
+    std::cerr << errstr << "\n";
+    exit(1);
+  }
+  if (c->set("ssl.key.password", keyPw, errstr) != RdKafka::Conf::CONF_OK) {
+    std::cerr << errstr << "\n";
+    exit(1);
+  }
 
   DeliveryReportCb drCb;
   if (c->set("dr_cb", &drCb, errstr) != RdKafka::Conf::CONF_OK) {
