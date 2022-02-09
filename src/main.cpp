@@ -11,6 +11,8 @@ DEFINE_string(output, "print", "what kind of events to produce");
 DEFINE_string(kafka_brokers, "localhost",
               "comma-separated list of kafka brokers");
 DEFINE_string(kafka_topic, "measurements", "topic to send kafka messages as");
+DEFINE_bool(timeshift, false,
+            "shift time stamps in file inputs to start immediately");
 
 int main(int argc, char **argv) {
   gflags::SetUsageMessage("fast event generator");
@@ -29,8 +31,10 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
+  std::string tsArg = FLAGS_timeshift ? "True" : "False";
   for (int i = 1; i < argc; ++i)
-    cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "')\n";
+    cmds +=
+        "t.createXMLFileInput('" + std::string(argv[i]) + "', " + tsArg + ")\n";
 
   if (FLAGS_input.find("countdown") != std::string::npos) {
     cmds += "t.createCountDownInput(5, 200)\n"

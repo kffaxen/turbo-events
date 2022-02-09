@@ -14,7 +14,7 @@ public:
   /// Create a new TurboEvents object.
   static std::unique_ptr<TurboEvents> create();
   /// Create a new XML file input.
-  virtual void createXMLFileInput(const char *name) = 0;
+  virtual void createXMLFileInput(const char *name, bool timeshift) = 0;
   /// Create a new StreamInput object.
   virtual void createCountDownInput(int m, int i = 200) = 0;
 
