@@ -1,7 +1,7 @@
 #ifndef XMLINPUT_HPP
 #define XMLINPUT_HPP
 
-#include "turboevents-internal.hpp"
+#include "ContainerInput.hpp"
 
 namespace TurboEvents {
 
@@ -23,27 +23,6 @@ private:
   std::string fname;
   /// Whether to time shift
   bool tshift;
-};
-
-/// An event stream that is read from an XML file
-class XMLEventStream : public EventStream {
-public:
-  /// Constructor
-  XMLEventStream(std::vector<std::unique_ptr<Event>> events);
-
-  /// Destructor
-  virtual ~XMLEventStream() {}
-
-  Event *getEvent() const override { return eventVec[eventIdx].get(); }
-
-  bool generate(Output &output) override;
-
-private:
-  /// The events of this stream
-  std::vector<std::unique_ptr<Event>> eventVec;
-
-  /// Index of current event
-  ssize_t eventIdx;
 };
 
 } // namespace TurboEvents
