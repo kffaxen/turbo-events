@@ -1,8 +1,10 @@
 #include "turboevents.hpp"
+#include "IO/ContainerInput.hpp"
 #include "IO/CountDownInput.hpp"
 #include "IO/KafkaOutput.hpp"
 #include "IO/PrintOutput.hpp"
 #include "IO/XMLInput.hpp"
+#include <pybind11/chrono.h>
 #include <pybind11/embed.h>
 #include <queue>
 #include <thread>
@@ -20,31 +22,39 @@ public:
   TurboEventsImpl() : inputs() {}
   ~TurboEventsImpl() {}
 
-  void createXMLFileInput(const char *name, bool timeshift) override;
+  void createContainerInput() override;
   void createCountDownInput(int m, int i) override;
+  void createXMLFileInput(const char *name, bool timeshift) override;
 
-  void setPrintOutput() override;
   void setKafkaOutput(std::string brokers, std::string caLocation,
                       std::string certLocation, std::string keyLocation,
                       std::string keyPwd, std::string topic) override;
+  void setPrintOutput() override;
 
   void run(double scale) override;
+
+  void addEvent(std::chrono::system_clock::time_point time,
+                std::string data) override;
 
 private:
   /// The output for the run.
   std::unique_ptr<Output> output;
   /// The input sources for the run.
   std::vector<std::unique_ptr<Input>> inputs;
+  /// Intermediate events for createContainerInput.
+  std::vector<std::unique_ptr<Event>> events;
 };
 
 PYBIND11_EMBEDDED_MODULE(TurboEvents, m) {
   py::class_<TurboEventsImpl>(m, "TurboEvents")
       .def(py::init())
-      .def("createXMLFileInput", &TurboEventsImpl::createXMLFileInput)
+      .def("createContainerInput", &TurboEventsImpl::createContainerInput)
       .def("createCountDownInput", &TurboEventsImpl::createCountDownInput)
-      .def("setPrintOutput", &TurboEventsImpl::setPrintOutput)
+      .def("createXMLFileInput", &TurboEventsImpl::createXMLFileInput)
       .def("setKafkaOutput", &TurboEventsImpl::setKafkaOutput)
-      .def("run", &TurboEventsImpl::run);
+      .def("setPrintOutput", &TurboEventsImpl::setPrintOutput)
+      .def("run", &TurboEventsImpl::run)
+      .def("addEvent", &TurboEventsImpl::addEvent);
 }
 
 TurboEvents::TurboEvents() {}
@@ -55,16 +65,16 @@ std::unique_ptr<TurboEvents> TurboEvents::create() {
   return std::make_unique<TurboEventsImpl>();
 }
 
-void TurboEventsImpl::createXMLFileInput(const char *name, bool timeshift) {
-  inputs.push_back(std::make_unique<XMLFileInput>(name, timeshift));
+void TurboEventsImpl::createContainerInput() {
+  inputs.push_back(std::make_unique<ContainerInput>(std::move(events)));
 }
 
 void TurboEventsImpl::createCountDownInput(int m, int i) {
   inputs.push_back(std::make_unique<CountDownInput>(m, i));
 }
 
-void TurboEventsImpl::setPrintOutput() {
-  output = std::make_unique<PrintOutput>();
+void TurboEventsImpl::createXMLFileInput(const char *name, bool timeshift) {
+  inputs.push_back(std::make_unique<XMLFileInput>(name, timeshift));
 }
 
 void TurboEventsImpl::setKafkaOutput(std::string brokers,
@@ -74,6 +84,10 @@ void TurboEventsImpl::setKafkaOutput(std::string brokers,
                                      std::string keyPwd, std::string topic) {
   output = std::make_unique<KafkaOutput>(brokers, caLocation, certLocation,
                                          keyLocation, keyPwd, topic);
+}
+
+void TurboEventsImpl::setPrintOutput() {
+  output = std::make_unique<PrintOutput>();
 }
 
 void TurboEvents::runScript(std::string &file) {
@@ -111,6 +125,11 @@ void TurboEventsImpl::run(double scale) {
       q.push(es); // Push the stream back on the queue if there are more events
   }
   for (auto &input : inputs) input->finish();
+}
+
+void TurboEventsImpl::addEvent(std::chrono::system_clock::time_point time,
+                               std::string data) {
+  events.push_back(output->makeEvent(time, data));
 }
 
 Output::~Output() = default;

@@ -1,3 +1,6 @@
+#ifndef COUNTDOWNINPUT_HPP
+#define COUNTDOWNINPUT_HPP
+
 #include "turboevents-internal.hpp"
 
 namespace TurboEvents {
@@ -44,3 +47,5 @@ private:
 };
 
 } // namespace TurboEvents
+
+#endif

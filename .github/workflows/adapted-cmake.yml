@@ -56,6 +56,7 @@ jobs:
 
     - name: Test
       run: |
+        cmake --build ${{github.workspace}}/build --config Release --target check
+        # Sanitizers/Valgrind needs Python to use the regular malloc.
         export PYTHONMALLOC=malloc
         cmake --build ${{github.workspace}}/build --config Debug --target check
-        cmake --build ${{github.workspace}}/build --config Release --target check

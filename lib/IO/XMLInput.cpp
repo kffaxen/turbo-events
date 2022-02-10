@@ -27,7 +27,7 @@ public:
 
 private:
   /// Event stream objects for open streams.
-  std::vector<XMLEventStream *> streams;
+  std::vector<std::unique_ptr<ContainerStream>> streams;
 };
 
 static XMLInput *xmlInput = nullptr;
@@ -52,10 +52,7 @@ XMLInput::XMLInput() {
   }
 }
 
-XMLInput::~XMLInput() {
-  for (auto *stream : streams) delete stream;
-  XMLPlatformUtils::Terminate();
-}
+XMLInput::~XMLInput() { XMLPlatformUtils::Terminate(); }
 
 void XMLInput::addStreamsFromXMLFile(Output &output,
                                      std::function<void(EventStream *)> push,
@@ -129,25 +126,14 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
       // and is no longer used.
       XMLString::release(&value);
     }
-    XMLEventStream *stream = new XMLEventStream(std::move(events));
-    push(stream);
+    streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
+    push(streams.back().get());
     events.clear();
-    streams.push_back(stream);
   }
   XMLString::release(&tsAttr);
   XMLString::release(&eventTag);
   XMLString::release(&valueAttr);
   parser->release();
-}
-
-XMLEventStream::XMLEventStream(std::vector<std::unique_ptr<Event>> events)
-    : eventVec(std::move(events)), eventIdx(-1) {}
-
-bool XMLEventStream::generate(Output &) {
-  // FIXME: (Clang-13) Use std::ssize(eventVec) in RHS instead casting LHS.
-  if (static_cast<size_t>(++eventIdx) >= eventVec.size()) return false;
-  time = eventVec[eventIdx]->time;
-  return true;
 }
 
 } // namespace TurboEvents

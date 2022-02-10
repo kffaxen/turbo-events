@@ -2,7 +2,8 @@ include(CTest)
 
 include(ProcessorCount)
 ProcessorCount(N)
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIG> -j${N})
+add_custom_target(check
+  COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIG> -j${N} --output-on-failure)
 
 # Test fixture to build the main binary which is required by most tests.
 add_test(NAME test_build
@@ -18,3 +19,8 @@ add_test(NAME xml_test
             ${TurboEvents_SOURCE_DIR}/test/events1.xml
             ${TurboEvents_SOURCE_DIR}/test/events2.xml)
 set_tests_properties(xml_test PROPERTIES FIXTURES_REQUIRED test_fixture)
+
+add_test(NAME container_test
+  COMMAND $<TARGET_FILE:turboevents_main>
+            --script ${TurboEvents_SOURCE_DIR}/test/containerinput.py)
+set_tests_properties(container_test PROPERTIES FIXTURES_REQUIRED test_fixture)
