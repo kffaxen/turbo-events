@@ -7,22 +7,20 @@ class CountDownEventStream : public EventStream {
 public:
   /// Constructor
   CountDownEventStream(int m, int i)
-      : EventStream(nullptr), n(m), interval(i) {}
+      : n(m), interval(std::chrono::milliseconds(i)) {}
 
   bool generate(Output &output) override {
     if (next != nullptr) delete next;
     if (n <= 0) return false;
-    next = output.makeEvent(std::chrono::system_clock::now() +
-                                std::chrono::milliseconds(interval),
-                            n);
-    time = next->time;
+    time += interval;
+    next = output.makeEvent(time, n);
     --n;
     return true;
   }
 
 private:
-  int n;              ///< How many events to generate
-  const int interval; ///< Interval in ms between events
+  int n;                              ///< How many events to generate
+  std::chrono::milliseconds interval; ///< Interval between events
 };
 
 /// An input class for streams that count down.

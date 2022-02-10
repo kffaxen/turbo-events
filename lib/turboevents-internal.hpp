@@ -58,7 +58,7 @@ struct Event {
 class EventStream {
 public:
   /// Constructor
-  EventStream(Event *e) : next(e) {}
+  EventStream() : time(std::chrono::system_clock::now()), next(nullptr) {}
   /// Virtual destructor
   virtual ~EventStream() {}
   /// Get next event
