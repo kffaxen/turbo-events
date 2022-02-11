@@ -17,6 +17,9 @@ DEFINE_string(kafka_key_password, "", "password for the key file");
 DEFINE_string(kafka_topic, "measurements", "topic to send kafka messages as");
 DEFINE_bool(timeshift, false,
             "shift time stamps in file inputs to start immediately");
+DEFINE_double(scale, 1.0,
+              "scaling factor for intervals between events, less than 1 "
+              "accelerates delivery");
 
 int main(int argc, char **argv) {
   gflags::SetUsageMessage("fast event generator");
@@ -47,7 +50,7 @@ int main(int argc, char **argv) {
             "t.createCountDownInput(2, 300)\n";
   }
 
-  cmds += "t.run()\n";
+  cmds += "t.run(" + std::to_string(FLAGS_scale) + ")\n";
   if (FLAGS_print) {
     std::cout << cmds;
     goto out;

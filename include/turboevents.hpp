@@ -34,7 +34,7 @@ public:
   static void runString(std::string &s);
 
   /// Run the event generator and process events.
-  virtual void run() = 0;
+  virtual void run(double scale) = 0;
 };
 
 } // namespace TurboEvents
