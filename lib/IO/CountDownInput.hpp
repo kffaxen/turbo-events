@@ -19,8 +19,8 @@ public:
   }
 
 private:
-  int n;                              ///< How many events to generate
-  std::chrono::milliseconds interval; ///< Interval between events
+  int n;                                    ///< How many events to generate
+  const std::chrono::milliseconds interval; ///< Interval between events
 };
 
 /// An input class for streams that count down.
