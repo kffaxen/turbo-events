@@ -28,7 +28,7 @@ public:
                       std::string certLocation, std::string keyLocation,
                       std::string keyPwd, std::string topic) override;
 
-  void run() override;
+  void run(double scale) override;
 
 private:
   /// The output for the run.
@@ -90,7 +90,7 @@ void TurboEvents::runString(std::string &s) {
   py::exec(s, scope);
 }
 
-void TurboEventsImpl::run() {
+void TurboEventsImpl::run(double scale) {
   auto greaterES = [](const EventStream *a, const EventStream *b) {
     return a->time > b->time;
   };
@@ -101,10 +101,11 @@ void TurboEventsImpl::run() {
     if (s->generate(*output)) q.push(s);
   };
   for (auto &input : inputs) input->addStreams(*output, push);
+  auto start = std::chrono::system_clock::now();
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();
-    std::this_thread::sleep_until(es->time);
+    std::this_thread::sleep_until(start + scale * (es->time - start));
     es->getNext()->trigger();
     if (es->generate(*output))
       q.push(es); // Push the stream back on the queue if there are more events
