@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 
 namespace TurboEvents {
@@ -17,11 +18,12 @@ public:
   virtual ~Output() = 0;
 
   /// Virtual function to make an event with a string payload
-  virtual Event *makeEvent(std::chrono::system_clock::time_point,
-                           std::string data) = 0;
+  virtual std::unique_ptr<Event>
+  makeEvent(std::chrono::system_clock::time_point, std::string data) = 0;
 
   /// Virtual function to make an event with an int payload
-  virtual Event *makeEvent(std::chrono::system_clock::time_point, int data) = 0;
+  virtual std::unique_ptr<Event>
+  makeEvent(std::chrono::system_clock::time_point, int data) = 0;
 
 protected:
   /// Common error handling function
@@ -58,22 +60,16 @@ struct Event {
 class EventStream {
 public:
   /// Constructor
-  EventStream() : time(std::chrono::system_clock::now()), next(nullptr) {}
+  EventStream() : time(std::chrono::system_clock::now()) {}
   /// Virtual destructor
   virtual ~EventStream() {}
-  /// Get next event
-  Event *getNext() const { return next; }
+  /// Get the current event.
+  virtual Event *getEvent() const = 0;
 
-  /// Generate the next event and write it to next returning true if an event
-  /// was found
+  /// Try to generate an event, return true if successful.
   virtual bool generate(Output &output) = 0;
-
-  /// The time stamp of the first event
+  /// The time stamp of the current event.
   std::chrono::system_clock::time_point time;
-
-protected:
-  /// The next event
-  Event *next;
 };
 
 } // namespace TurboEvents

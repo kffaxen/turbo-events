@@ -29,20 +29,21 @@ private:
 class XMLEventStream : public EventStream {
 public:
   /// Constructor
-  XMLEventStream(std::vector<Event *> events);
+  XMLEventStream(std::vector<std::unique_ptr<Event>> events);
 
   /// Destructor
   virtual ~XMLEventStream() {}
 
-  /// Generator
+  Event *getEvent() const override { return eventVec[eventIdx].get(); }
+
   bool generate(Output &output) override;
 
 private:
   /// The events of this stream
-  std::vector<Event *> eventVec;
+  std::vector<std::unique_ptr<Event>> eventVec;
 
-  /// Index of next event to generate
-  size_t eventIdx;
+  /// Index of current event
+  ssize_t eventIdx;
 };
 
 } // namespace TurboEvents

@@ -9,18 +9,18 @@ public:
   CountDownEventStream(int m, int i)
       : n(m), interval(std::chrono::milliseconds(i)) {}
 
+  Event *getEvent() const override { return event.get(); }
+
   bool generate(Output &output) override {
-    if (next != nullptr) delete next;
-    if (n <= 0) return false;
     time += interval;
-    next = output.makeEvent(time, n);
-    --n;
-    return true;
+    event = output.makeEvent(time, n);
+    return n-- > 0;
   }
 
 private:
   int n;                                    ///< How many events to generate
   const std::chrono::milliseconds interval; ///< Interval between events
+  std::unique_ptr<Event> event;             ///< The current event.
 };
 
 /// An input class for streams that count down.

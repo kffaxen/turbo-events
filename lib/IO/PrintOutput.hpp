@@ -31,14 +31,15 @@ public:
   virtual ~PrintOutput() override {}
 
   /// Make an event that prints a string
-  Event *makeEvent(std::chrono::system_clock::time_point t,
-                   std::string data) override {
-    return new PrintEvent<std::string>(t, data);
+  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
+                                   std::string data) override {
+    return std::make_unique<PrintEvent<std::string>>(t, data);
   }
 
   /// Make an event that prints an int
-  Event *makeEvent(std::chrono::system_clock::time_point t, int data) override {
-    return new PrintEvent<int>(t, data);
+  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
+                                   int data) override {
+    return std::make_unique<PrintEvent<int>>(t, data);
   }
 };
 
