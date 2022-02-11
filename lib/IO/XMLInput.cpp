@@ -98,7 +98,7 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
 
   std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
   std::chrono::nanoseconds shift(0);
-  std::vector<Event *> events;
+  std::vector<std::unique_ptr<Event>> events;
   for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
     auto *elem = static_cast<DOMElement *>(myList->item(i));
 
@@ -140,15 +140,13 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
   parser->release();
 }
 
-XMLEventStream::XMLEventStream(std::vector<Event *> events)
-    : eventVec(events), eventIdx(0) {}
+XMLEventStream::XMLEventStream(std::vector<std::unique_ptr<Event>> events)
+    : eventVec(std::move(events)), eventIdx(-1) {}
 
 bool XMLEventStream::generate(Output &) {
-  if (next != nullptr) delete next;
-  if (eventIdx >= eventVec.size()) return false;
-  next = eventVec[eventIdx];
-  eventIdx++;
-  time = next->time;
+  // FIXME: (Clang-13) Use std::ssize(eventVec) in RHS instead casting LHS.
+  if (static_cast<size_t>(++eventIdx) >= eventVec.size()) return false;
+  time = eventVec[eventIdx]->time;
   return true;
 }
 

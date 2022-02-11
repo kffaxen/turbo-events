@@ -50,14 +50,15 @@ public:
   virtual ~KafkaOutput() override {}
 
   /// Make an event that is published to a topic
-  Event *makeEvent(std::chrono::system_clock::time_point t,
-                   std::string data) override {
-    return new KafkaEvent(brokers, caLoc, certLoc, keyLoc, keyPw, topic, t,
-                          data);
+  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
+                                   std::string data) override {
+    return std::make_unique<KafkaEvent>(brokers, caLoc, certLoc, keyLoc, keyPw,
+                                        topic, t, data);
   }
 
   /// Make an event that prints an int
-  Event *makeEvent(std::chrono::system_clock::time_point, int) override {
+  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point,
+                                   int) override {
     unimp("KafkaOutput", "int");
     return nullptr;
   }

@@ -106,7 +106,7 @@ void TurboEventsImpl::run(double scale) {
     EventStream *es = q.top();
     q.pop();
     std::this_thread::sleep_until(start + scale * (es->time - start));
-    es->getNext()->trigger();
+    es->getEvent()->trigger();
     if (es->generate(*output))
       q.push(es); // Push the stream back on the queue if there are more events
   }
