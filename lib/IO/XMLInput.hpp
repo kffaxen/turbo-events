@@ -16,7 +16,7 @@ public:
   void addStreams(Output &output,
                   std::function<void(EventStream *)> push) override;
 
-  void finish() override;
+  void finish() override {}
 
 private:
   /// The name of the file
