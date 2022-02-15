@@ -30,18 +30,13 @@ private:
   std::vector<std::unique_ptr<ContainerStream>> streams;
 };
 
-static XMLInput *xmlInput = nullptr;
+static std::unique_ptr<XMLInput> xmlInput;
 
 void XMLFileInput::addStreams(Output &output,
                               std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
-  if (xmlInput == nullptr) xmlInput = new XMLInput();
+  if (!xmlInput) xmlInput = std::make_unique<XMLInput>();
   xmlInput->addStreamsFromXMLFile(output, push, fname.c_str(), tshift);
-}
-
-void XMLFileInput::finish() {
-  delete xmlInput;
-  xmlInput = nullptr;
 }
 
 XMLInput::XMLInput() {
