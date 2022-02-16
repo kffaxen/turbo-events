@@ -104,11 +104,13 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
       char *timeStamp =
           XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
 
-      char *value =
-          XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
-
+      // Use strptime, libstdc++ has numerous issues with std::get_time
+      // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
       struct tm timeBuf = {};
-      strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+      char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+      if (!rv)
+        std::throw_with_nested(std::runtime_error(
+            "Could not parse time: '" + std::string(timeStamp) + "'"));
       XMLString::release(&timeStamp);
       auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
 
@@ -117,6 +119,9 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
         firstEvent = false;
       }
       tp += shift;
+
+      char *value =
+          XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
       events.push_back(output.makeEvent(tp, value));
       // The value string has been converted to a std::string by the call above
       // and is no longer used.
