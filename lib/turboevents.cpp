@@ -15,8 +15,6 @@ namespace TurboEvents {
 
 uint64_t streamNum = 0;
 
-Input::~Input() = default;
-
 /// The real TurboEvents implementation.
 class TurboEventsImpl : public TurboEvents {
 public:
@@ -135,13 +133,6 @@ void TurboEventsImpl::run(double scale) {
 void TurboEventsImpl::addEvent(std::chrono::system_clock::time_point time,
                                std::string data) {
   events.push_back(output->makeEvent(time, data));
-}
-
-Output::~Output() = default;
-
-void Output::unimp(std::string className, std::string typeName) {
-  std::cerr << className << "::makeEvent(" << typeName << ") not implemented\n";
-  exit(1);
 }
 
 } // namespace TurboEvents
