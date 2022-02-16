@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <string>
 
@@ -19,7 +20,7 @@ extern uint64_t streamNum;
 class Output {
 public:
   /// Virtual destructor
-  virtual ~Output() = 0;
+  virtual ~Output() = default;
 
   /// Virtual function to make an event with a string payload
   virtual std::unique_ptr<Event>
@@ -31,14 +32,18 @@ public:
 
 protected:
   /// Common error handling function
-  void unimp(std::string className, std::string typeName);
+  void unimp(std::string className, std::string typeName) {
+    std::cerr << className << "::makeEvent(" << typeName
+              << ") not implemented\n";
+    exit(1);
+  }
 };
 
 /// A class encapsulating an input, such as a file
 class Input {
 public:
   /// Virtual destructor
-  virtual ~Input() = 0;
+  virtual ~Input() = default;
 
   /// Add the event streams in the input to the event generator.
   virtual void addStreams(Output &output,
