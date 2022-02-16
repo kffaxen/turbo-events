@@ -13,6 +13,8 @@ namespace py = pybind11;
 
 namespace TurboEvents {
 
+uint64_t streamNum = 0;
+
 Input::~Input() = default;
 
 /// The real TurboEvents implementation.
@@ -106,6 +108,9 @@ void TurboEvents::runString(std::string &s) {
 
 void TurboEventsImpl::run(double scale) {
   auto greaterES = [](const EventStream *a, const EventStream *b) {
+    // std::priority_queue is not stable, use stream id as differentiator
+    // to ensure determinism across runs.
+    if (a->time == b->time) return a->id > b->id;
     return a->time > b->time;
   };
   std::priority_queue<EventStream *, std::vector<EventStream *>,

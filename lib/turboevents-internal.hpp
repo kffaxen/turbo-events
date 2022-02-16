@@ -2,6 +2,7 @@
 #define TURBOEVENTS_INTERNAL_HPP
 
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -10,6 +11,9 @@ namespace TurboEvents {
 
 class EventStream;
 struct Event;
+
+/// Unique for ordering events with identical time.
+extern uint64_t streamNum;
 
 /// A class encapsulating an output destination
 class Output {
@@ -49,10 +53,10 @@ struct Event {
   Event(std::chrono::system_clock::time_point t) : time(t) {}
   /// Virtual destructor
   virtual ~Event() {}
-  /// The time stamp of the event
-  const std::chrono::system_clock::time_point time;
   /// Function to call when the time is right
   virtual void trigger() const = 0;
+  /// The time stamp of the event
+  const std::chrono::system_clock::time_point time;
 };
 
 /// A class for event streams where the events of the stream are delivered in
@@ -60,7 +64,7 @@ struct Event {
 class EventStream {
 public:
   /// Constructor
-  EventStream() : time(std::chrono::system_clock::now()) {}
+  EventStream() : id(streamNum++), time(std::chrono::system_clock::now()) {}
   /// Virtual destructor
   virtual ~EventStream() {}
   /// Get the current event.
@@ -68,6 +72,8 @@ public:
 
   /// Try to generate an event, return true if successful.
   virtual bool generate(Output &output) = 0;
+  /// Identity for deterministic ordering of events with same times.
+  const uint64_t id;
   /// The time stamp of the current event.
   std::chrono::system_clock::time_point time;
 };
