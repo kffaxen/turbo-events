@@ -118,7 +118,7 @@ void TurboEventsImpl::run(double scale) {
     if (s->generate(*output)) q.push(s);
   };
   for (auto &input : inputs) input->addStreams(*output, push);
-  auto start = std::chrono::system_clock::now();
+  const auto start = output->start;
   while (!q.empty()) {
     EventStream *es = q.top();
     q.pop();

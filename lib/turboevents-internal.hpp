@@ -19,6 +19,7 @@ extern uint64_t streamNum;
 /// A class encapsulating an output destination
 class Output {
 public:
+  Output() : start(std::chrono::system_clock::now()) {}
   /// Virtual destructor
   virtual ~Output() = default;
 
@@ -29,6 +30,9 @@ public:
   /// Virtual function to make an event with an int payload
   virtual std::unique_ptr<Event>
   makeEvent(std::chrono::system_clock::time_point, int data) = 0;
+
+  /// The start time of the output object.
+  const std::chrono::system_clock::time_point start;
 
 protected:
   /// Common error handling function
