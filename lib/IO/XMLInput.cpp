@@ -26,6 +26,8 @@ public:
                              const char *fname, bool timeshift);
 
 private:
+  /// The start time for the XML subsystem.
+  std::chrono::system_clock::time_point now;
   /// Event stream objects for open streams.
   std::vector<std::unique_ptr<ContainerStream>> streams;
 };
@@ -39,7 +41,7 @@ void XMLFileInput::addStreams(Output &output,
   xmlInput->addStreamsFromXMLFile(output, push, fname.c_str(), tshift);
 }
 
-XMLInput::XMLInput() {
+XMLInput::XMLInput() : now(std::chrono::system_clock::now()) {
   try {
     XMLPlatformUtils::Initialize();
   } catch (const XMLException &e) {
@@ -88,7 +90,6 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
   XMLString::release(&ns);
   XMLString::release(&tag);
 
-  std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
   std::chrono::nanoseconds shift(0);
   std::vector<std::unique_ptr<Event>> events;
   for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
