@@ -83,54 +83,81 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
   XMLCh *tsAttr = XMLString::transcode("ts");
   XMLCh *eventTag = XMLString::transcode("event");
   XMLCh *valueAttr = XMLString::transcode("value");
+  XMLCh *patient = XMLString::transcode("patient");
+  XMLCh *idAttr = XMLString::transcode("id");
 
-  XMLCh *ns = XMLString::transcode("*");
-  XMLCh *tag = XMLString::transcode("glucose_level");
-  auto *myList = doc->getElementsByTagNameNS(ns, tag);
-  XMLString::release(&ns);
-  XMLString::release(&tag);
+  auto *patientList = doc->getElementsByTagName(patient);
+  for (XMLSize_t pi = 0; pi < patientList->getLength(); pi++) {
+    if (patientList->item(pi)->getNodeType() != DOMNode::ELEMENT_NODE) continue;
 
-  std::chrono::nanoseconds shift(0);
-  std::vector<std::unique_ptr<Event>> events;
-  for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
-    auto *elem = static_cast<DOMElement *>(myList->item(i));
+    auto *pat = static_cast<DOMElement *>(patientList->item(pi));
+    char *patId = XMLString::transcode(
+        pat->getAttributes()->getNamedItem(idAttr)->getNodeValue());
 
-    DOMNodeList *xmlEvents = elem->getElementsByTagName(eventTag);
+    XMLCh *ns = XMLString::transcode("*");
+    XMLCh *tag = XMLString::transcode("glucose_level");
+    auto *myList = pat->getElementsByTagNameNS(ns, tag);
+    XMLString::release(&ns);
+    XMLString::release(&tag);
 
-    bool firstEvent = true;
-    for (XMLSize_t idx = 0; idx < xmlEvents->getLength(); ++idx) {
-      auto *attrs = xmlEvents->item(idx)->getAttributes();
+    std::chrono::nanoseconds shift(0);
+    std::vector<std::unique_ptr<Event>> events;
+    for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
+      auto *elem = static_cast<DOMElement *>(myList->item(i));
 
-      char *timeStamp =
-          XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
+      DOMNodeList *xmlEvents = elem->getElementsByTagName(eventTag);
 
-      // Use strptime, libstdc++ has numerous issues with std::get_time
-      // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
-      struct tm timeBuf = {};
-      char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
-      if (!rv)
-        std::throw_with_nested(std::runtime_error(
-            "Could not parse time: '" + std::string(timeStamp) + "'"));
-      XMLString::release(&timeStamp);
-      auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
+      bool firstEvent = true;
+      for (XMLSize_t idx = 0; idx < xmlEvents->getLength(); ++idx) {
+        auto *attrs = xmlEvents->item(idx)->getAttributes();
 
-      if (firstEvent) {
-        if (timeshift) shift = now - tp;
-        firstEvent = false;
+        char *timeStamp =
+            XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
+
+        // Use strptime, libstdc++ has numerous issues with std::get_time
+        // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
+        struct tm timeBuf = {};
+        char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+        if (!rv)
+          std::throw_with_nested(std::runtime_error(
+              "Could not parse time: '" + std::string(timeStamp) + "'"));
+        XMLString::release(&timeStamp);
+        auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
+
+        if (firstEvent) {
+          if (timeshift) shift = now - tp;
+          firstEvent = false;
+        }
+        tp += shift;
+
+        std::time_t tptime = std::chrono::system_clock::to_time_t(tp);
+        std::string csv(100, '\0');
+
+        // The use of std::localtime is unfortunate since it is not guaranteed
+        // to be reentrant. For the time being it works since turboevents is
+        // single threaded.
+        std::strftime(&csv[0], csv.size(), "%d-%m-%Y %H:%M:%S",
+                      std::localtime(&tptime));
+
+        char *value = XMLString::transcode(
+            attrs->getNamedItem(valueAttr)->getNodeValue());
+
+        csv += ",";
+        csv += patId;
+        csv += ",";
+        csv += value;
+        XMLString::release(&value);
+
+        events.push_back(output.makeEvent(tp, csv));
       }
-      tp += shift;
-
-      char *value =
-          XMLString::transcode(attrs->getNamedItem(valueAttr)->getNodeValue());
-      events.push_back(output.makeEvent(tp, value));
-      // The value string has been converted to a std::string by the call above
-      // and is no longer used.
-      XMLString::release(&value);
+      streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
+      push(streams.back().get());
+      events.clear();
     }
-    streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
-    push(streams.back().get());
-    events.clear();
+    XMLString::release(&patId);
   }
+  XMLString::release(&idAttr);
+  XMLString::release(&patient);
   XMLString::release(&tsAttr);
   XMLString::release(&eventTag);
   XMLString::release(&valueAttr);
