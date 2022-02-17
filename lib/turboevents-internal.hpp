@@ -19,7 +19,9 @@ extern uint64_t streamNum;
 /// A class encapsulating an output destination
 class Output {
 public:
-  Output() : start(std::chrono::system_clock::now()) {}
+  /// Constructor.
+  Output(bool timeshift)
+      : start(std::chrono::system_clock::now()), tshift(timeshift) {}
   /// Virtual destructor
   virtual ~Output() = default;
 
@@ -33,6 +35,8 @@ public:
 
   /// The start time of the output object.
   const std::chrono::system_clock::time_point start;
+  /// Whether to time shift.
+  const bool tshift;
 
 protected:
   /// Common error handling function

@@ -9,8 +9,7 @@ namespace TurboEvents {
 class XMLFileInput : public Input {
 public:
   /// Constructor
-  XMLFileInput(const char *fileName, bool timeshift)
-      : fname(fileName), tshift(timeshift) {}
+  XMLFileInput(const char *fileName) : fname(fileName) {}
   virtual ~XMLFileInput() {}
 
   void addStreams(Output &output,
@@ -21,8 +20,6 @@ public:
 private:
   /// The name of the file
   std::string fname;
-  /// Whether to time shift
-  bool tshift;
 };
 
 } // namespace TurboEvents

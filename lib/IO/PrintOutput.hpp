@@ -27,6 +27,8 @@ private:
 /// Output object that creates PrintObject
 class PrintOutput : public Output {
 public:
+  /// Constructor
+  PrintOutput(bool timeshift) : Output(timeshift) {}
   /// Destructor
   virtual ~PrintOutput() override {}
 
