@@ -24,12 +24,13 @@ public:
 
   void createContainerInput() override;
   void createCountDownInput(int m, int i) override;
-  void createXMLFileInput(const char *name, bool timeshift) override;
+  void createXMLFileInput(const char *name) override;
 
-  void setKafkaOutput(std::string brokers, std::string caLocation,
-                      std::string certLocation, std::string keyLocation,
-                      std::string keyPwd, std::string topic) override;
-  void setPrintOutput() override;
+  void setKafkaOutput(bool timeshift, std::string brokers,
+                      std::string caLocation, std::string certLocation,
+                      std::string keyLocation, std::string keyPwd,
+                      std::string topic) override;
+  void setPrintOutput(bool timeshift) override;
 
   void run(double scale) override;
 
@@ -73,21 +74,21 @@ void TurboEventsImpl::createCountDownInput(int m, int i) {
   inputs.push_back(std::make_unique<CountDownInput>(m, i));
 }
 
-void TurboEventsImpl::createXMLFileInput(const char *name, bool timeshift) {
-  inputs.push_back(std::make_unique<XMLFileInput>(name, timeshift));
+void TurboEventsImpl::createXMLFileInput(const char *name) {
+  inputs.push_back(std::make_unique<XMLFileInput>(name));
 }
 
-void TurboEventsImpl::setKafkaOutput(std::string brokers,
+void TurboEventsImpl::setKafkaOutput(bool timeshift, std::string brokers,
                                      std::string caLocation,
                                      std::string certLocation,
                                      std::string keyLocation,
                                      std::string keyPwd, std::string topic) {
-  output = std::make_unique<KafkaOutput>(brokers, caLocation, certLocation,
-                                         keyLocation, keyPwd, topic);
+  output = std::make_unique<KafkaOutput>(
+      timeshift, brokers, caLocation, certLocation, keyLocation, keyPwd, topic);
 }
 
-void TurboEventsImpl::setPrintOutput() {
-  output = std::make_unique<PrintOutput>();
+void TurboEventsImpl::setPrintOutput(bool timeshift) {
+  output = std::make_unique<PrintOutput>(timeshift);
 }
 
 void TurboEvents::runScript(std::string &file) {

@@ -23,7 +23,7 @@ public:
   /// Open an XML-file and add one or more event streams based on its contents
   void addStreamsFromXMLFile(Output &output,
                              std::function<void(EventStream *)> push,
-                             const char *fname, bool timeshift);
+                             const char *fname);
 
 private:
   /// Event stream objects for open streams.
@@ -36,7 +36,7 @@ void XMLFileInput::addStreams(Output &output,
                               std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
   if (!xmlInput) xmlInput = std::make_unique<XMLInput>();
-  xmlInput->addStreamsFromXMLFile(output, push, fname.c_str(), tshift);
+  xmlInput->addStreamsFromXMLFile(output, push, fname.c_str());
 }
 
 XMLInput::XMLInput() {
@@ -51,7 +51,7 @@ XMLInput::~XMLInput() { XMLPlatformUtils::Terminate(); }
 
 void XMLInput::addStreamsFromXMLFile(Output &output,
                                      std::function<void(EventStream *)> push,
-                                     const char *fname, bool timeshift) {
+                                     const char *fname) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl =
@@ -123,7 +123,7 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
         auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
 
         if (firstEvent) {
-          if (timeshift) shift = output.start - tp;
+          if (output.tshift) shift = output.start - tp;
           firstEvent = false;
         }
         tp += shift;

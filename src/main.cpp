@@ -28,10 +28,11 @@ int main(int argc, char **argv) {
 
   std::string cmds("import TurboEvents\n"
                    "t = TurboEvents.TurboEvents()\n");
+  std::string tsArg = FLAGS_timeshift ? "True" : "False";
   if (FLAGS_output == "print")
-    cmds += "t.setPrintOutput()\n";
+    cmds += "t.setPrintOutput(" + tsArg + ")\n";
   else if (FLAGS_output == "kafka")
-    cmds += "t.setKafkaOutput('" + FLAGS_kafka_brokers + "', '" +
+    cmds += "t.setKafkaOutput(" + tsArg + ", '" + FLAGS_kafka_brokers + "', '" +
             FLAGS_kafka_ca_file + "', '" + FLAGS_kafka_certificate_file +
             "', '" + FLAGS_kafka_key_file + "', '" + FLAGS_kafka_key_password +
             "', '" + FLAGS_kafka_topic + "')\n";
@@ -40,10 +41,8 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  std::string tsArg = FLAGS_timeshift ? "True" : "False";
   for (int i = 1; i < argc; ++i)
-    cmds +=
-        "t.createXMLFileInput('" + std::string(argv[i]) + "', " + tsArg + ")\n";
+    cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "')\n";
 
   if (FLAGS_input.find("countdown") != std::string::npos) {
     cmds += "t.createCountDownInput(5, 200)\n"

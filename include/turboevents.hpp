@@ -23,14 +23,15 @@ public:
   /// Create a new StreamInput object.
   virtual void createCountDownInput(int m, int i = 200) = 0;
   /// Create a new XML file input.
-  virtual void createXMLFileInput(const char *name, bool timeshift) = 0;
+  virtual void createXMLFileInput(const char *name) = 0;
 
   /// Set the output to Kafka.
-  virtual void setKafkaOutput(std::string brokers, std::string caLocation,
-                              std::string certLocation, std::string keyLocation,
-                              std::string keyPwd, std::string topic) = 0;
+  virtual void setKafkaOutput(bool timeshift, std::string brokers,
+                              std::string caLocation, std::string certLocation,
+                              std::string keyLocation, std::string keyPwd,
+                              std::string topic) = 0;
   /// Set the output to print.
-  virtual void setPrintOutput() = 0;
+  virtual void setPrintOutput(bool timeshift) = 0;
 
   /// Run the file in Python.
   static void runScript(std::string &file);

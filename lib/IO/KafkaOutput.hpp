@@ -41,11 +41,11 @@ private:
 class KafkaOutput : public Output {
 public:
   /// Constructor.
-  KafkaOutput(std::string broker, std::string caLocation,
+  KafkaOutput(bool timeshift, std::string broker, std::string caLocation,
               std::string certLocation, std::string keyLocation,
               std::string keyPwd, std::string top)
-      : brokers(broker), caLoc(caLocation), certLoc(certLocation),
-        keyLoc(keyLocation), keyPw(keyPwd), topic(top) {}
+      : Output(timeshift), brokers(broker), caLoc(caLocation),
+        certLoc(certLocation), keyLoc(keyLocation), keyPw(keyPwd), topic(top) {}
   /// Destructor
   virtual ~KafkaOutput() override {}
 
