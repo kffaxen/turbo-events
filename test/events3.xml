@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<patient id="1">
+  <meal>
+    <event ts="12-01-2022  9:38:03" type="Breakfast" carbs="46"/>
+  </meal>
+</patient>
