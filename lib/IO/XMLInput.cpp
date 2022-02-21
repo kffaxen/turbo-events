@@ -174,26 +174,24 @@ void XMLInput::addStreamsFromNode(Output &output,
                                   std::string ctx, bool &firstEvent,
                                   std::chrono::nanoseconds &shift,
                                   std::string str, DOMNode *node) {
-  std::string comma = ",";
   size_t n = str.find("/");
   std::string eStr = str.substr(0, n);
-  str.erase(0, n);
-  str.erase(0, 1);
+  str.erase(0, n + 1);
   // Recursive case; there are more element tags after this one
   size_t elemOffset = eStr[0] == ':' ? 1 : 0;
   eStr.erase(0, elemOffset);
   size_t attrOffset = eStr.find(":");
+  const std::string comma = ",";
 
   if (elemOffset == 1) ctx += comma + eStr.substr(0, attrOffset);
 
   XMLCh *elemTag = XMLString::transcode(eStr.substr(0, attrOffset).c_str());
   DOMNodeList *nodes = nullptr;
-  if (node->getNodeType() == DOMNode::ELEMENT_NODE) {
+  if (node->getNodeType() == DOMNode::ELEMENT_NODE)
     nodes = static_cast<DOMElement *>(node)->getElementsByTagName(elemTag);
-  } else if (node->getNodeType() == DOMNode::DOCUMENT_NODE) {
+  else if (node->getNodeType() == DOMNode::DOCUMENT_NODE)
     nodes = static_cast<DOMDocument *>(node)->getElementsByTagName(elemTag);
-  }
-  XMLSize_t nNodes = nodes == nullptr ? 0 : nodes->getLength();
+  XMLString::release(&elemTag);
 
   std::vector<XMLCh *> attrTags;
   while (attrOffset != std::string::npos) {
@@ -204,6 +202,7 @@ void XMLInput::addStreamsFromNode(Output &output,
         XMLString::transcode(eStr.substr(0, attrOffset).c_str()));
   }
 
+  XMLSize_t nNodes = nodes == nullptr ? 0 : nodes->getLength();
   if (n != std::string::npos) {
     for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
       std::string lctx = ctx;
@@ -212,56 +211,54 @@ void XMLInput::addStreamsFromNode(Output &output,
         lctx += comma + getAttrVal(lnode->getAttributes(), attrTag);
       addStreamsFromNode(output, push, lctx, firstEvent, shift, str, lnode);
     }
-  } else {
-    // Read events
-    // The first attribute tag is the name of the time stamp, peel it off
-    XMLCh *tsTag = attrTags[0];
-    attrTags.erase(attrTags.begin());
-    std::vector<std::unique_ptr<Event>> events;
-    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
-      auto *attrs = nodes->item(nodeIdx)->getAttributes();
-
-      char *timeStamp =
-          XMLString::transcode(attrs->getNamedItem(tsTag)->getNodeValue());
-
-      // Use strptime, libstdc++ has numerous issues with std::get_time
-      // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
-      struct tm timeBuf = {};
-      char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
-      if (!rv)
-        std::throw_with_nested(std::runtime_error(
-            "Could not parse time: '" + std::string(timeStamp) + "'"));
-      XMLString::release(&timeStamp);
-      auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
-
-      if (firstEvent) {
-        if (output.tshift) shift = output.start - tp;
-        firstEvent = false;
-      }
-      tp += shift;
-
-      std::time_t tptime = std::chrono::system_clock::to_time_t(tp);
-      char buf[100];
-      std::string csv;
-
-      // The use of std::localtime is unfortunate since it is not guaranteed
-      // to be reentrant. For the time being it works since turboevents is
-      // single threaded.
-      std::strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S",
-                    std::localtime(&tptime));
-      csv += buf;
-      csv += ctx;
-      for (XMLCh *attrTag : attrTags) csv += comma + getAttrVal(attrs, attrTag);
-
-      events.push_back(output.makeEvent(tp, csv));
-    }
-    XMLString::release(&tsTag);
-    streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
-    push(streams.back().get());
-    events.clear();
+    for (XMLCh *attrTag : attrTags) XMLString::release(&attrTag);
+    return;
   }
+
+  // Read events
+  // The first attribute tag is the name of the time stamp, peel it off
+  XMLCh *tsTag = attrTags[0];
+  attrTags.erase(attrTags.begin());
+  std::vector<std::unique_ptr<Event>> events;
+  for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
+    auto *attrs = nodes->item(nodeIdx)->getAttributes();
+
+    char *timeStamp =
+        XMLString::transcode(attrs->getNamedItem(tsTag)->getNodeValue());
+
+    // Use strptime, libstdc++ has numerous issues with std::get_time
+    // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
+    struct tm timeBuf = {};
+    char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+    if (!rv)
+      std::throw_with_nested(std::runtime_error("Could not parse time: '" +
+                                                std::string(timeStamp) + "'"));
+    XMLString::release(&timeStamp);
+    auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
+
+    if (firstEvent) {
+      if (output.tshift) shift = output.start - tp;
+      firstEvent = false;
+    }
+    tp += shift;
+
+    std::time_t tptime = std::chrono::system_clock::to_time_t(tp);
+    char buf[100];
+
+    // The use of std::localtime is unfortunate since it is not guaranteed
+    // to be reentrant. For the time being it works since turboevents is
+    // single threaded.
+    std::strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S",
+                  std::localtime(&tptime));
+    std::string csv = buf;
+    csv += ctx;
+    for (XMLCh *attrTag : attrTags) csv += comma + getAttrVal(attrs, attrTag);
+    events.push_back(output.makeEvent(tp, csv));
+  }
+  streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
+  push(streams.back().get());
+  XMLString::release(&tsTag);
   for (XMLCh *attrTag : attrTags) XMLString::release(&attrTag);
-  XMLString::release(&elemTag);
 }
 
 } // namespace TurboEvents
