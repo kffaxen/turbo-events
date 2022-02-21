@@ -211,7 +211,7 @@ void XMLInput::addStreamsFromNode(Output &output,
   }
 
   if (n != std::string::npos) {
-    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; nodeIdx++) {
+    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
       std::string lctx = ctx;
       DOMNode *lnode = nodes->item(nodeIdx);
       for (XMLCh *attrTag : attrTags)
@@ -224,7 +224,7 @@ void XMLInput::addStreamsFromNode(Output &output,
     XMLCh *tsTag = attrTags[0];
     attrTags.erase(attrTags.begin());
     std::vector<std::unique_ptr<Event>> events;
-    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; nodeIdx++) {
+    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
       auto *attrs = nodes->item(nodeIdx)->getAttributes();
 
       char *timeStamp =
