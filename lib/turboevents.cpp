@@ -24,7 +24,7 @@ public:
 
   void createContainerInput() override;
   void createCountDownInput(int m, int i) override;
-  void createXMLFileInput(const char *name) override;
+  void createXMLFileInput(const char *name, const char *ctrl) override;
 
   void setKafkaOutput(bool timeshift, std::string brokers,
                       std::string caLocation, std::string certLocation,
@@ -74,8 +74,8 @@ void TurboEventsImpl::createCountDownInput(int m, int i) {
   inputs.push_back(std::make_unique<CountDownInput>(m, i));
 }
 
-void TurboEventsImpl::createXMLFileInput(const char *name) {
-  inputs.push_back(std::make_unique<XMLFileInput>(name));
+void TurboEventsImpl::createXMLFileInput(const char *name, const char *ctrl) {
+  inputs.push_back(std::make_unique<XMLFileInput>(name, ctrl));
 }
 
 void TurboEventsImpl::setKafkaOutput(bool timeshift, std::string brokers,
