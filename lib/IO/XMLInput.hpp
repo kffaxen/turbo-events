@@ -9,7 +9,8 @@ namespace TurboEvents {
 class XMLFileInput : public Input {
 public:
   /// Constructor
-  XMLFileInput(const char *fileName, std::vector<std::string> &ctrl)
+  XMLFileInput(const char *fileName,
+               std::vector<std::vector<std::string>> &ctrl)
       : fname(fileName), control(ctrl) {}
   virtual ~XMLFileInput() {}
 
@@ -22,7 +23,7 @@ private:
   /// The name of the file
   std::string fname;
   /// What information to extract from the XML file
-  std::vector<std::string> control;
+  std::vector<std::vector<std::string>> control;
 };
 
 } // namespace TurboEvents

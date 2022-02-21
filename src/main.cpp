@@ -45,13 +45,23 @@ int main(int argc, char **argv) {
   }
 
   { // Deal with the xml_ctrl flag and corresponding XML inputs.
-    std::vector<std::string> xmlCtrl;
+    std::vector<std::vector<std::string>> xmlCtrl;
     std::istringstream iss(FLAGS_xml_ctrl);
     std::string item;
-    while (std::getline(iss, item, ',')) xmlCtrl.push_back(item);
+    while (std::getline(iss, item, ',')) {
+      std::vector<std::string> xmlCtrl2;
+      std::istringstream iss2(item);
+      std::string item2;
+      while (std::getline(iss2, item2, '/')) xmlCtrl2.push_back(item2);
+      xmlCtrl.push_back(xmlCtrl2);
+    }
     for (int i = 1; i < argc; ++i) {
       cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "', [";
-      for (auto &ctrl : xmlCtrl) cmds += "'" + ctrl + "', ";
+      for (auto &ctrl : xmlCtrl) {
+        cmds += "[";
+        for (auto &ctrl2 : ctrl) cmds += "'" + ctrl2 + "', ";
+        cmds += "], ";
+      }
       cmds += "])\n";
     }
   }

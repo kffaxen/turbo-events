@@ -24,7 +24,7 @@ public:
   void addStreamsFromXMLFile(Output &output,
                              std::function<void(EventStream *)> push,
                              const char *fname,
-                             std::vector<std::string> &control);
+                             std::vector<std::vector<std::string>> &control);
 
 private:
   /// Event stream objects for open streams.
@@ -33,8 +33,8 @@ private:
   void addStreamsFromNode(Output &output,
                           std::function<void(EventStream *)> push,
                           std::string ctx, bool &firstEvent,
-                          std::chrono::nanoseconds &shift, std::string str,
-                          DOMNode *node);
+                          std::chrono::nanoseconds &shift,
+                          std::vector<std::string> &str, DOMNode *node);
   /// Read attribute value from an XML element
   std::string getAttrVal(DOMNamedNodeMap *attrs, XMLCh *attrTag);
 };
@@ -121,10 +121,9 @@ XMLInput::~XMLInput() { XMLPlatformUtils::Terminate(); }
  *
  * *********************************************************************/
 
-void XMLInput::addStreamsFromXMLFile(Output &output,
-                                     std::function<void(EventStream *)> push,
-                                     const char *fname,
-                                     std::vector<std::string> &control) {
+void XMLInput::addStreamsFromXMLFile(
+    Output &output, std::function<void(EventStream *)> push, const char *fname,
+    std::vector<std::vector<std::string>> &control) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl =
@@ -173,38 +172,36 @@ void XMLInput::addStreamsFromNode(Output &output,
                                   std::function<void(EventStream *)> push,
                                   std::string ctx, bool &firstEvent,
                                   std::chrono::nanoseconds &shift,
-                                  std::string str, DOMNode *node) {
-  size_t n = str.find("/");
-  std::string eStr = str.substr(0, n);
-  str.erase(0, n + 1);
-  // Recursive case; there are more element tags after this one
-  size_t elemOffset = eStr[0] == ':' ? 1 : 0;
-  eStr.erase(0, elemOffset);
-  size_t attrOffset = eStr.find(":");
-  const std::string comma = ",";
+                                  std::vector<std::string> &str,
+                                  DOMNode *node) {
+  std::vector<std::string> items;
+  std::istringstream iss(str[0]);
+  std::string item;
+  while (std::getline(iss, item, ':')) items.push_back(item);
+  str.erase(str.begin());
 
-  if (elemOffset == 1) ctx += comma + eStr.substr(0, attrOffset);
+  // Recursive case; there are more element tags after this one.
+  const bool moreTags = items[0].empty();
+  if (moreTags) items.erase(items.begin());
 
-  XMLCh *elemTag = XMLString::transcode(eStr.substr(0, attrOffset).c_str());
+  XMLCh *elemTag = XMLString::transcode(items[0].c_str());
   DOMNodeList *nodes = nullptr;
   if (node->getNodeType() == DOMNode::ELEMENT_NODE)
     nodes = static_cast<DOMElement *>(node)->getElementsByTagName(elemTag);
   else if (node->getNodeType() == DOMNode::DOCUMENT_NODE)
     nodes = static_cast<DOMDocument *>(node)->getElementsByTagName(elemTag);
   XMLString::release(&elemTag);
+  if (!nodes) return;
 
   std::vector<XMLCh *> attrTags;
-  while (attrOffset != std::string::npos) {
-    // Erase up to and including the ':' before the attribute
-    eStr.erase(0, attrOffset + 1);
-    attrOffset = eStr.find(':');
-    attrTags.push_back(
-        XMLString::transcode(eStr.substr(0, attrOffset).c_str()));
-  }
+  for (auto i = 0; auto &t : items)
+    if (i++ > 0) attrTags.push_back(XMLString::transcode(t.c_str()));
 
-  XMLSize_t nNodes = nodes == nullptr ? 0 : nodes->getLength();
-  if (n != std::string::npos) {
-    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
+  const std::string comma = ",";
+  if (moreTags) ctx += comma + items[0];
+
+  if (!str.empty()) {
+    for (XMLSize_t nodeIdx = 0; nodeIdx < nodes->getLength(); ++nodeIdx) {
       std::string lctx = ctx;
       DOMNode *lnode = nodes->item(nodeIdx);
       for (XMLCh *attrTag : attrTags)
@@ -220,7 +217,7 @@ void XMLInput::addStreamsFromNode(Output &output,
   XMLCh *tsTag = attrTags[0];
   attrTags.erase(attrTags.begin());
   std::vector<std::unique_ptr<Event>> events;
-  for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; ++nodeIdx) {
+  for (XMLSize_t nodeIdx = 0; nodeIdx < nodes->getLength(); ++nodeIdx) {
     auto *attrs = nodes->item(nodeIdx)->getAttributes();
 
     char *timeStamp =
