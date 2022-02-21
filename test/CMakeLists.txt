@@ -24,3 +24,12 @@ add_test(NAME container_test
   COMMAND $<TARGET_FILE:turboevents_main>
             --script ${TurboEvents_SOURCE_DIR}/test/containerinput.py)
 set_tests_properties(container_test PROPERTIES FIXTURES_REQUIRED test_fixture)
+
+add_test(NAME xml_ctrl_test
+  COMMAND $<TARGET_FILE:turboevents_main>
+            --input="hello,countdown"
+            --xml_ctrl="patient:id/:glucose_level/event:ts:value,patient:id/:meal/event:ts:type:carbs"
+            ${TurboEvents_SOURCE_DIR}/test/events1.xml
+            ${TurboEvents_SOURCE_DIR}/test/events2.xml
+            ${TurboEvents_SOURCE_DIR}/test/events3.xml)
+set_tests_properties(xml_ctrl_test PROPERTIES FIXTURES_REQUIRED test_fixture)
