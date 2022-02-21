@@ -2,6 +2,7 @@
 
 #include <gflags/gflags.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 DEFINE_string(script, "", "file name for Python script");
@@ -43,10 +44,17 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  std::string ctrl(FLAGS_xml_ctrl);
-  for (int i = 1; i < argc; ++i)
-    cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "', '" + ctrl +
-            "')\n";
+  { // Deal with the xml_ctrl flag and corresponding XML inputs.
+    std::vector<std::string> xmlCtrl;
+    std::istringstream iss(FLAGS_xml_ctrl);
+    std::string item;
+    while (std::getline(iss, item, ',')) xmlCtrl.push_back(item);
+    for (int i = 1; i < argc; ++i) {
+      cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "', [";
+      for (auto &ctrl : xmlCtrl) cmds += "'" + ctrl + "', ";
+      cmds += "])\n";
+    }
+  }
 
   if (FLAGS_input.find("countdown") != std::string::npos) {
     cmds += "t.createCountDownInput(5, 200)\n"

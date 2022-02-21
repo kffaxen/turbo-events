@@ -23,7 +23,8 @@ public:
   /// Open an XML-file and add one or more event streams based on its contents
   void addStreamsFromXMLFile(Output &output,
                              std::function<void(EventStream *)> push,
-                             const char *fname, std::string control);
+                             const char *fname,
+                             std::vector<std::string> &control);
 
 private:
   /// Event stream objects for open streams.
@@ -122,7 +123,8 @@ XMLInput::~XMLInput() { XMLPlatformUtils::Terminate(); }
 
 void XMLInput::addStreamsFromXMLFile(Output &output,
                                      std::function<void(EventStream *)> push,
-                                     const char *fname, std::string control) {
+                                     const char *fname,
+                                     std::vector<std::string> &control) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl =
@@ -151,16 +153,8 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
 
   bool firstEvent = true;
   std::chrono::nanoseconds shift(0);
-  // std::string str = "patient:id/glucose_level/event:ts:value";
-  // std::string str =
-  // "patient:id/glucose_level/event:ts:value,patient:id/:meal/event:ts:type:carbs";
-  while (!control.empty()) {
-    size_t n = control.find(",");
-    std::string prefix = control.substr(0, n);
-    control.erase(0, n);
-    control.erase(0, 1); // Remove the ','
-    addStreamsFromNode(output, push, "", firstEvent, shift, prefix, doc);
-  }
+  for (auto &ctrl : control)
+    addStreamsFromNode(output, push, "", firstEvent, shift, ctrl, doc);
   parser->release();
 }
 

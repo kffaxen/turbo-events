@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace TurboEvents {
 
@@ -23,7 +24,8 @@ public:
   /// Create a new StreamInput object.
   virtual void createCountDownInput(int m, int i = 200) = 0;
   /// Create a new XML file input.
-  virtual void createXMLFileInput(const char *name, const char *ctrl) = 0;
+  virtual void createXMLFileInput(const char *name,
+                                  std::vector<std::string> &ctrl) = 0;
 
   /// Set the output to Kafka.
   virtual void setKafkaOutput(bool timeshift, std::string brokers,

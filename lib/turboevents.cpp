@@ -6,6 +6,8 @@
 #include "IO/XMLInput.hpp"
 #include <pybind11/chrono.h>
 #include <pybind11/embed.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <queue>
 #include <thread>
 
@@ -24,7 +26,8 @@ public:
 
   void createContainerInput() override;
   void createCountDownInput(int m, int i) override;
-  void createXMLFileInput(const char *name, const char *ctrl) override;
+  void createXMLFileInput(const char *name,
+                          std::vector<std::string> &ctrl) override;
 
   void setKafkaOutput(bool timeshift, std::string brokers,
                       std::string caLocation, std::string certLocation,
@@ -74,7 +77,8 @@ void TurboEventsImpl::createCountDownInput(int m, int i) {
   inputs.push_back(std::make_unique<CountDownInput>(m, i));
 }
 
-void TurboEventsImpl::createXMLFileInput(const char *name, const char *ctrl) {
+void TurboEventsImpl::createXMLFileInput(const char *name,
+                                         std::vector<std::string> &ctrl) {
   inputs.push_back(std::make_unique<XMLFileInput>(name, ctrl));
 }
 
