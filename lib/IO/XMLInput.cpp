@@ -23,11 +23,19 @@ public:
   /// Open an XML-file and add one or more event streams based on its contents
   void addStreamsFromXMLFile(Output &output,
                              std::function<void(EventStream *)> push,
-                             const char *fname);
+                             const char *fname, std::string control);
 
 private:
   /// Event stream objects for open streams.
   std::vector<std::unique_ptr<ContainerStream>> streams;
+  /// Traversing a parsed XML file
+  void addStreamsFromNode(Output &output,
+                          std::function<void(EventStream *)> push,
+                          std::string ctx, bool &firstEvent,
+                          std::chrono::nanoseconds &shift, std::string str,
+                          DOMNode *node);
+  /// Read attribute value from an XML element
+  std::string getAttrVal(DOMNamedNodeMap *attrs, XMLCh *attrTag);
 };
 
 static std::unique_ptr<XMLInput> xmlInput;
@@ -36,7 +44,7 @@ void XMLFileInput::addStreams(Output &output,
                               std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
   if (!xmlInput) xmlInput = std::make_unique<XMLInput>();
-  xmlInput->addStreamsFromXMLFile(output, push, fname.c_str());
+  xmlInput->addStreamsFromXMLFile(output, push, fname.c_str(), control);
 }
 
 XMLInput::XMLInput() {
@@ -49,9 +57,72 @@ XMLInput::XMLInput() {
 
 XMLInput::~XMLInput() { XMLPlatformUtils::Terminate(); }
 
+/***********************************************************************
+ * The streams created by the addStreamsFromXMLFile() function consist
+ * of events with payloads in the form of strings in CSV (comma
+ * separated values) sytńtax.
+ * The 'control' argument defines which streams to generate from an
+ * XML file and it also determines what data should be included in
+ * the payload strings.
+ *
+ * The syntax of the 'control' string is as follows:
+ * 'control' should be a comma separated list of stream descriptors.
+ * A stream descriptor is a sequence of element descriptors, separated
+ *   by '/' (slash).
+ * An element descriptor starts with an optional ':' (colon) followed by
+ *   an element tag and a sequence of attribute descriptors.
+ * An attribute descriptor consists of a ':' (colon) followed by an
+ *   attribute name.
+ *
+ * Example: patient:id/glucose_level/event:ts:value
+ * This control string consists of a single stream descriptor made
+ * up of three element descriptors, 'patient:id', 'glucose_level', and
+ * 'events:ts:value'.
+ *
+ * This stream descriptor is intended to work with for instance the
+ * following XML file:
+ *
+ * <?xml version="1.0" encoding="UTF-8"?>
+ * <patient id="0">
+ *  <glucose_level>
+ *   <event ts="12-01-2022  9:38:00" value="100"/>
+ *   <event ts="12-01-2022  9:38:01" value="102"/>
+ *  </glucose_level>
+ * </patient>
+ *
+ * The stream descriptor defines both which streams should be generated
+ * and what data their events should carry. In the example above, each
+ * XML element with the tag 'glucose_level' that is nested inside an
+ * element with the 'patient' tag generate one stream of events. Each of
+ * these evets is built from an XML element tagged 'event' that is nested
+ * inside the element tagged 'glucose_level'.
+ *
+ * Since there is only one 'patient' element and that element contains
+ * only one 'glucose_level' element, only one stream will be generated.
+ * That stream will include two events with the following payloads:
+ *
+ *  12-01-2022  9:38:00,0,100
+ *  12-01-2022  9:38:01,0,101
+ *
+ * There will be one value field in the event payload string for each ':'
+ * in the stream descriptor. Invariably, the time stamp of the event is
+ * the first value. By convention, the first attribute descriptor in the
+ * last (most deeply nested) element descriptor (':ts' in the example)
+ * is used as the time stamp of the event, and will be the first part of
+ * each event payload. The rest of the parts correspond to the other
+ * occurrences of ':' in the stream descriptor (':id' and ':value' in
+ * the example). If the colon is part of an attribute descriptor, the
+ * value of the attribute is used. If it is an attribute of an enclosing
+ * element, the same value will be used in each element of the stream.
+ * If the colon is the optional colon starting an element descriptor,
+ * that tag is the corresponding value. This mechanism is not used in
+ * the example above.
+ *
+ * *********************************************************************/
+
 void XMLInput::addStreamsFromXMLFile(Output &output,
                                      std::function<void(EventStream *)> push,
-                                     const char *fname) {
+                                     const char *fname, std::string control) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMImplementation *impl =
@@ -78,88 +149,125 @@ void XMLInput::addStreamsFromXMLFile(Output &output,
     exit(-1);
   }
 
-  XMLCh *tsAttr = XMLString::transcode("ts");
-  XMLCh *eventTag = XMLString::transcode("event");
-  XMLCh *valueAttr = XMLString::transcode("value");
-  XMLCh *patient = XMLString::transcode("patient");
-  XMLCh *idAttr = XMLString::transcode("id");
-
-  auto *patientList = doc->getElementsByTagName(patient);
-  for (XMLSize_t pi = 0; pi < patientList->getLength(); pi++) {
-    if (patientList->item(pi)->getNodeType() != DOMNode::ELEMENT_NODE) continue;
-
-    auto *pat = static_cast<DOMElement *>(patientList->item(pi));
-    char *patId = XMLString::transcode(
-        pat->getAttributes()->getNamedItem(idAttr)->getNodeValue());
-
-    XMLCh *ns = XMLString::transcode("*");
-    XMLCh *tag = XMLString::transcode("glucose_level");
-    auto *myList = pat->getElementsByTagNameNS(ns, tag);
-    XMLString::release(&ns);
-    XMLString::release(&tag);
-
-    std::chrono::nanoseconds shift(0);
-    std::vector<std::unique_ptr<Event>> events;
-    for (XMLSize_t i = 0; i < myList->getLength(); ++i) {
-      auto *elem = static_cast<DOMElement *>(myList->item(i));
-
-      DOMNodeList *xmlEvents = elem->getElementsByTagName(eventTag);
-
-      bool firstEvent = true;
-      for (XMLSize_t idx = 0; idx < xmlEvents->getLength(); ++idx) {
-        auto *attrs = xmlEvents->item(idx)->getAttributes();
-
-        char *timeStamp =
-            XMLString::transcode(attrs->getNamedItem(tsAttr)->getNodeValue());
-
-        // Use strptime, libstdc++ has numerous issues with std::get_time
-        // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
-        struct tm timeBuf = {};
-        char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
-        if (!rv)
-          std::throw_with_nested(std::runtime_error(
-              "Could not parse time: '" + std::string(timeStamp) + "'"));
-        XMLString::release(&timeStamp);
-        auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
-
-        if (firstEvent) {
-          if (output.tshift) shift = output.start - tp;
-          firstEvent = false;
-        }
-        tp += shift;
-
-        std::time_t tptime = std::chrono::system_clock::to_time_t(tp);
-        std::string csv(100, '\0');
-
-        // The use of std::localtime is unfortunate since it is not guaranteed
-        // to be reentrant. For the time being it works since turboevents is
-        // single threaded.
-        std::strftime(&csv[0], csv.size(), "%d-%m-%Y %H:%M:%S",
-                      std::localtime(&tptime));
-
-        char *value = XMLString::transcode(
-            attrs->getNamedItem(valueAttr)->getNodeValue());
-
-        csv += ",";
-        csv += patId;
-        csv += ",";
-        csv += value;
-        XMLString::release(&value);
-
-        events.push_back(output.makeEvent(tp, csv));
-      }
-      streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
-      push(streams.back().get());
-      events.clear();
-    }
-    XMLString::release(&patId);
+  bool firstEvent = true;
+  std::chrono::nanoseconds shift(0);
+  // std::string str = "patient:id/glucose_level/event:ts:value";
+  // std::string str =
+  // "patient:id/glucose_level/event:ts:value,patient:id/:meal/event:ts:type:carbs";
+  while (!control.empty()) {
+    size_t n = control.find(",");
+    std::string prefix = control.substr(0, n);
+    control.erase(0, n);
+    control.erase(0, 1); // Remove the ','
+    addStreamsFromNode(output, push, "", firstEvent, shift, prefix, doc);
   }
-  XMLString::release(&idAttr);
-  XMLString::release(&patient);
-  XMLString::release(&tsAttr);
-  XMLString::release(&eventTag);
-  XMLString::release(&valueAttr);
   parser->release();
+}
+
+std::string XMLInput::getAttrVal(DOMNamedNodeMap *attrs, XMLCh *attrTag) {
+  std::string result;
+  auto *attr = attrs->getNamedItem(attrTag);
+  if (attr != nullptr) {
+    char *attrVal = XMLString::transcode(attr->getNodeValue());
+    result = attrVal;
+    XMLString::release(&attrVal);
+  }
+  return result;
+}
+
+void XMLInput::addStreamsFromNode(Output &output,
+                                  std::function<void(EventStream *)> push,
+                                  std::string ctx, bool &firstEvent,
+                                  std::chrono::nanoseconds &shift,
+                                  std::string str, DOMNode *node) {
+  std::string comma = ",";
+  size_t n = str.find("/");
+  std::string eStr = str.substr(0, n);
+  str.erase(0, n);
+  str.erase(0, 1);
+  // Recursive case; there are more element tags after this one
+  size_t elemOffset = eStr[0] == ':' ? 1 : 0;
+  eStr.erase(0, elemOffset);
+  size_t attrOffset = eStr.find(":");
+
+  if (elemOffset == 1) ctx += comma + eStr.substr(0, attrOffset);
+
+  XMLCh *elemTag = XMLString::transcode(eStr.substr(0, attrOffset).c_str());
+  DOMNodeList *nodes = nullptr;
+  if (node->getNodeType() == DOMNode::ELEMENT_NODE) {
+    nodes = static_cast<DOMElement *>(node)->getElementsByTagName(elemTag);
+  } else if (node->getNodeType() == DOMNode::DOCUMENT_NODE) {
+    nodes = static_cast<DOMDocument *>(node)->getElementsByTagName(elemTag);
+  }
+  XMLSize_t nNodes = nodes == nullptr ? 0 : nodes->getLength();
+
+  std::vector<XMLCh *> attrTags;
+  while (attrOffset != std::string::npos) {
+    // Erase up to and including the ':' before the attribute
+    eStr.erase(0, attrOffset + 1);
+    attrOffset = eStr.find(':');
+    attrTags.push_back(
+        XMLString::transcode(eStr.substr(0, attrOffset).c_str()));
+  }
+
+  if (n != std::string::npos) {
+    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; nodeIdx++) {
+      std::string lctx = ctx;
+      DOMNode *lnode = nodes->item(nodeIdx);
+      for (XMLCh *attrTag : attrTags)
+        lctx += comma + getAttrVal(lnode->getAttributes(), attrTag);
+      addStreamsFromNode(output, push, lctx, firstEvent, shift, str, lnode);
+    }
+  } else {
+    // Read events
+    // The first attribute tag is the name of the time stamp, peel it off
+    XMLCh *tsTag = attrTags[0];
+    attrTags.erase(attrTags.begin());
+    std::vector<std::unique_ptr<Event>> events;
+    for (XMLSize_t nodeIdx = 0; nodeIdx < nNodes; nodeIdx++) {
+      auto *attrs = nodes->item(nodeIdx)->getAttributes();
+
+      char *timeStamp =
+          XMLString::transcode(attrs->getNamedItem(tsTag)->getNodeValue());
+
+      // Use strptime, libstdc++ has numerous issues with std::get_time
+      // before 2022 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714).
+      struct tm timeBuf = {};
+      char *rv = strptime(timeStamp, "%d-%m-%Y %H:%M:%S", &timeBuf);
+      if (!rv)
+        std::throw_with_nested(std::runtime_error(
+            "Could not parse time: '" + std::string(timeStamp) + "'"));
+      XMLString::release(&timeStamp);
+      auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
+
+      if (firstEvent) {
+        if (output.tshift) shift = output.start - tp;
+        firstEvent = false;
+      }
+      tp += shift;
+
+      std::time_t tptime = std::chrono::system_clock::to_time_t(tp);
+      char buf[100];
+      std::string csv;
+
+      // The use of std::localtime is unfortunate since it is not guaranteed
+      // to be reentrant. For the time being it works since turboevents is
+      // single threaded.
+      std::strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S",
+                    std::localtime(&tptime));
+      csv += buf;
+      csv += ctx;
+      for (XMLCh *attrTag : attrTags) csv += comma + getAttrVal(attrs, attrTag);
+
+      events.push_back(output.makeEvent(tp, csv));
+    }
+    XMLString::release(&tsTag);
+    streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
+    push(streams.back().get());
+    events.clear();
+  }
+  for (XMLCh *attrTag : attrTags) XMLString::release(&attrTag);
+  XMLString::release(&elemTag);
 }
 
 } // namespace TurboEvents

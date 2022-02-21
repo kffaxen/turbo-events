@@ -20,6 +20,8 @@ DEFINE_bool(timeshift, false,
 DEFINE_double(scale, 1.0,
               "scaling factor for intervals between events, less than 1 "
               "accelerates delivery");
+DEFINE_string(xml_ctrl, "patient:id/glucose_level/event:ts:value",
+              "what to extract from xml file");
 
 int main(int argc, char **argv) {
   gflags::SetUsageMessage("fast event generator");
@@ -41,8 +43,10 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
+  std::string ctrl(FLAGS_xml_ctrl);
   for (int i = 1; i < argc; ++i)
-    cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "')\n";
+    cmds += "t.createXMLFileInput('" + std::string(argv[i]) + "', '" + ctrl +
+            "')\n";
 
   if (FLAGS_input.find("countdown") != std::string::npos) {
     cmds += "t.createCountDownInput(5, 200)\n"
