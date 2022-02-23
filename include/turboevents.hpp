@@ -17,7 +17,7 @@ public:
   virtual ~TurboEvents();
 
   /// Create a new TurboEvents object.
-  static std::unique_ptr<TurboEvents> create();
+  static std::unique_ptr<TurboEvents> create(bool timeshift);
 
   /// Create an input from the previous calls to addEvent.
   virtual void createContainerInput() = 0;
@@ -28,13 +28,12 @@ public:
   createXMLFileInput(const char *name,
                      std::vector<std::vector<std::string>> &ctrl) = 0;
 
-  /// Set the output to Kafka.
-  virtual void setKafkaOutput(bool timeshift, std::string brokers,
-                              std::string caLocation, std::string certLocation,
-                              std::string keyLocation, std::string keyPwd,
-                              std::string topic) = 0;
-  /// Set the output to print.
-  virtual void setPrintOutput(bool timeshift) = 0;
+  /// Add a Kafka output.
+  virtual void addKafkaOutput(std::string brokers, std::string caLocation,
+                              std::string certLocation, std::string keyLocation,
+                              std::string keyPwd, std::string topic) = 0;
+  /// Add a print output.
+  virtual void addPrintOutput() = 0;
 
   /// Run the file in Python.
   static void runScript(std::string &file);

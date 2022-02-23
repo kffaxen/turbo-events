@@ -1,8 +1,8 @@
 import datetime
 import time
 import TurboEvents
-t = TurboEvents.TurboEvents()
-t.setPrintOutput(False)
+t = TurboEvents.TurboEvents(False)
+t.addPrintOutput()
 t.addEvent(datetime.datetime.fromtimestamp(time.time()), 'Hello,')
 time.sleep(0.3)
 t.addEvent(datetime.datetime.fromtimestamp(time.time()), 'World!')

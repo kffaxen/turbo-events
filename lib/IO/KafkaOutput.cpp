@@ -15,7 +15,7 @@ public:
   }
 };
 
-void KafkaEvent::trigger() const {
+void KafkaOutput::trigger(Event &e) {
   std::string errstr;
 
   RdKafka::Conf *c = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
@@ -59,9 +59,10 @@ void KafkaEvent::trigger() const {
   delete c;
 
 retry:
-  RdKafka::ErrorCode err = p->produce(
-      topic, RdKafka::Topic::PARTITION_UA, RdKafka::Producer::RK_MSG_COPY,
-      const_cast<char *>(data.c_str()), data.size(), NULL, 0, 0, NULL, NULL);
+  RdKafka::ErrorCode err = p->produce(topic, RdKafka::Topic::PARTITION_UA,
+                                      RdKafka::Producer::RK_MSG_COPY,
+                                      const_cast<char *>(e.data.c_str()),
+                                      e.data.size(), NULL, 0, 0, NULL, NULL);
 
   if (err != RdKafka::ERR_NO_ERROR) {
     std::cerr << "% Failed to produce to topic " << topic << ": "

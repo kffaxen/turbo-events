@@ -14,7 +14,7 @@ public:
       : fname(fileName), control(ctrl) {}
   virtual ~XMLFileInput() {}
 
-  void addStreams(Output &output,
+  void addStreams(Config &cfg,
                   std::function<void(EventStream *)> push) override;
 
   void finish() override {}

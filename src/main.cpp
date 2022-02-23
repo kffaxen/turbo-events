@@ -8,7 +8,7 @@
 DEFINE_string(script, "", "file name for Python script");
 DEFINE_bool(print, false, "print the Python commands and exit");
 DEFINE_string(input, "", "comma-separated list of algorithmic input streams");
-DEFINE_string(output, "print", "what kind of events to produce");
+DEFINE_string(output, "print", "comma-separated list of outputs");
 DEFINE_string(kafka_brokers, "localhost",
               "comma-separated list of kafka brokers");
 DEFINE_string(kafka_ca_file, "", "path to ca file");
@@ -29,19 +29,26 @@ int main(int argc, char **argv) {
   gflags::SetVersionString("0.1");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  std::string cmds("import TurboEvents\n"
-                   "t = TurboEvents.TurboEvents()\n");
+  std::string cmds("import TurboEvents\n");
   std::string tsArg = FLAGS_timeshift ? "True" : "False";
-  if (FLAGS_output == "print")
-    cmds += "t.setPrintOutput(" + tsArg + ")\n";
-  else if (FLAGS_output == "kafka")
-    cmds += "t.setKafkaOutput(" + tsArg + ", '" + FLAGS_kafka_brokers + "', '" +
-            FLAGS_kafka_ca_file + "', '" + FLAGS_kafka_certificate_file +
-            "', '" + FLAGS_kafka_key_file + "', '" + FLAGS_kafka_key_password +
-            "', '" + FLAGS_kafka_topic + "')\n";
-  else {
-    std::cerr << "Unknown output: " << FLAGS_output << "\n";
-    exit(1);
+  cmds += "t = TurboEvents.TurboEvents(" + tsArg + ")\n";
+
+  { // Deal with the output flag.
+    std::istringstream iss(FLAGS_output);
+    std::string output;
+    while (std::getline(iss, output, ',')) {
+      if (output == "kafka")
+        cmds += "t.addKafkaOutput('" + FLAGS_kafka_brokers + "', '" +
+                FLAGS_kafka_ca_file + "', '" + FLAGS_kafka_certificate_file +
+                "', '" + FLAGS_kafka_key_file + "', '" +
+                FLAGS_kafka_key_password + "', '" + FLAGS_kafka_topic + "')\n";
+      else if (output == "print")
+        cmds += "t.addPrintOutput()\n";
+      else {
+        std::cerr << "Unknown output: " << output << "\n";
+        exit(1);
+      }
+    }
   }
 
   { // Deal with the xml_ctrl flag and corresponding XML inputs.

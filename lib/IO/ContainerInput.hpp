@@ -15,7 +15,7 @@ public:
 
   Event *getEvent() const override { return events[ix].get(); }
 
-  bool generate(Output &) override {
+  bool generate(Config &) override {
     // FIXME: (Clang-13) Use std::ssize(events) in RHS instead casting LHS.
     if (static_cast<size_t>(++ix) >= events.size()) return false;
     time = events[ix]->time;
@@ -36,7 +36,7 @@ public:
 
   virtual ~ContainerInput() {}
 
-  void addStreams(Output &, std::function<void(EventStream *)> push) override {
+  void addStreams(Config &, std::function<void(EventStream *)> push) override {
     push(stream.get());
   }
 
