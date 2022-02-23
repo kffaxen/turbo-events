@@ -14,9 +14,9 @@ public:
 
   Event *getEvent() const override { return event.get(); }
 
-  bool generate(Output &output) override {
+  bool generate(Config &cfg) override {
     time += interval;
-    event = output.makeEvent(time, n);
+    event = cfg.makeEvent(time, n);
     return n-- > 0;
   }
 
@@ -35,7 +35,7 @@ public:
 
   virtual ~CountDownInput() {}
 
-  void addStreams(Output &, std::function<void(EventStream *)> push) override {
+  void addStreams(Config &, std::function<void(EventStream *)> push) override {
     push(stream.get());
   }
 

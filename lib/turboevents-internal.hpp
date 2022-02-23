@@ -10,66 +10,42 @@
 
 namespace TurboEvents {
 
-class EventStream;
-struct Event;
-
 /// Unique for ordering events with identical time.
 extern uint64_t streamNum;
 
-/// A class encapsulating an output destination
-class Output {
-public:
-  /// Constructor.
-  Output(bool timeshift)
-      : start(std::chrono::system_clock::now()), tshift(timeshift) {}
+/// A type for events with time stamps and string payload.
+struct Event {
+  /// Constructor
+  Event(std::chrono::system_clock::time_point t, std::string d)
+      : time(t), data(d) {}
   /// Virtual destructor
-  virtual ~Output() = default;
+  virtual ~Event() {}
+  const std::chrono::system_clock::time_point time; ///< Time stamp of event.
+  const std::string data;                           ///< Data of event.
+};
 
-  /// Virtual function to make an event with a string payload
-  virtual std::unique_ptr<Event>
-  makeEvent(std::chrono::system_clock::time_point, std::string data) = 0;
+/// Various configuration of the system.
+class Config {
+public:
+  /// Constructor
+  Config(std::chrono::system_clock::time_point t, bool timeshift)
+      : start(t), tshift(timeshift) {}
 
-  /// Virtual function to make an event with an int payload
-  virtual std::unique_ptr<Event>
-  makeEvent(std::chrono::system_clock::time_point, int data) = 0;
+  /// Make an event with a string payload.
+  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
+                                   std::string data) const {
+    return std::make_unique<Event>(t, data);
+  }
+  /// Make an event with an int payload.
+  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
+                                   int data) const {
+    return std::make_unique<Event>(t, std::to_string(data));
+  }
 
-  /// The start time of the output object.
+  /// Start time of the system.
   const std::chrono::system_clock::time_point start;
   /// Whether to time shift.
   const bool tshift;
-
-protected:
-  /// Common error handling function
-  void unimp(std::string className, std::string typeName) {
-    std::cerr << className << "::makeEvent(" << typeName
-              << ") not implemented\n";
-    exit(1);
-  }
-};
-
-/// A class encapsulating an input, such as a file
-class Input {
-public:
-  /// Virtual destructor
-  virtual ~Input() = default;
-
-  /// Add the event streams in the input to the event generator.
-  virtual void addStreams(Output &output,
-                          std::function<void(EventStream *)> push) = 0;
-  /// Deallocate resources used by the class.
-  virtual void finish() = 0;
-};
-
-/// A type for events with time stamps
-struct Event {
-  /// Constructor
-  Event(std::chrono::system_clock::time_point t) : time(t) {}
-  /// Virtual destructor
-  virtual ~Event() {}
-  /// Function to call when the time is right
-  virtual void trigger() const = 0;
-  /// The time stamp of the event
-  const std::chrono::system_clock::time_point time;
 };
 
 /// A class for event streams where the events of the stream are delivered in
@@ -84,11 +60,36 @@ public:
   virtual Event *getEvent() const = 0;
 
   /// Try to generate an event, return true if successful.
-  virtual bool generate(Output &output) = 0;
+  virtual bool generate(Config &cfg) = 0;
   /// Identity for deterministic ordering of events with same times.
   const uint64_t id;
   /// The time stamp of the current event.
   std::chrono::system_clock::time_point time;
+};
+
+/// A class encapsulating an input, such as a file
+class Input {
+public:
+  /// Virtual destructor
+  virtual ~Input() = default;
+
+  /// Add the event streams in the input to the event generator.
+  virtual void addStreams(Config &cfg,
+                          std::function<void(EventStream *)> push) = 0;
+  /// Deallocate resources used by the class.
+  virtual void finish() = 0;
+};
+
+/// A class encapsulating an output destination
+class Output {
+public:
+  /// Constructor.
+  Output() {}
+  /// Virtual destructor
+  virtual ~Output() = default;
+
+  /// Function to call when the time is right
+  virtual void trigger(Event &e) = 0;
 };
 
 } // namespace TurboEvents

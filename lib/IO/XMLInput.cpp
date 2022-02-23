@@ -21,7 +21,7 @@ public:
   virtual ~XMLInput();
 
   /// Open an XML-file and add one or more event streams based on its contents
-  void addStreamsFromXMLFile(Output &output,
+  void addStreamsFromXMLFile(Config &cfg,
                              std::function<void(EventStream *)> push,
                              const char *fname,
                              std::vector<std::vector<std::string>> &control);
@@ -30,8 +30,7 @@ private:
   /// Event stream objects for open streams.
   std::vector<std::unique_ptr<ContainerStream>> streams;
   /// Traversing a parsed XML file
-  void addStreamsFromNode(Output &output,
-                          std::function<void(EventStream *)> push,
+  void addStreamsFromNode(Config &cfg, std::function<void(EventStream *)> push,
                           std::string ctx, bool &firstEvent,
                           std::chrono::nanoseconds &shift,
                           std::vector<std::string> &str, DOMNode *node);
@@ -41,11 +40,11 @@ private:
 
 static std::unique_ptr<XMLInput> xmlInput;
 
-void XMLFileInput::addStreams(Output &output,
+void XMLFileInput::addStreams(Config &cfg,
                               std::function<void(EventStream *)> push) {
   // First, ensure that the XML system is up and running.
   if (!xmlInput) xmlInput = std::make_unique<XMLInput>();
-  xmlInput->addStreamsFromXMLFile(output, push, fname.c_str(), control);
+  xmlInput->addStreamsFromXMLFile(cfg, push, fname.c_str(), control);
 }
 
 XMLInput::XMLInput() {
@@ -122,7 +121,7 @@ XMLInput::~XMLInput() { XMLPlatformUtils::Terminate(); }
  * *********************************************************************/
 
 void XMLInput::addStreamsFromXMLFile(
-    Output &output, std::function<void(EventStream *)> push, const char *fname,
+    Config &cfg, std::function<void(EventStream *)> push, const char *fname,
     std::vector<std::vector<std::string>> &control) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
@@ -153,7 +152,7 @@ void XMLInput::addStreamsFromXMLFile(
   bool firstEvent = true;
   std::chrono::nanoseconds shift(0);
   for (auto &ctrl : control)
-    addStreamsFromNode(output, push, "", firstEvent, shift, ctrl, doc);
+    addStreamsFromNode(cfg, push, "", firstEvent, shift, ctrl, doc);
   parser->release();
 }
 
@@ -168,7 +167,7 @@ std::string XMLInput::getAttrVal(DOMNamedNodeMap *attrs, XMLCh *attrTag) {
   return result;
 }
 
-void XMLInput::addStreamsFromNode(Output &output,
+void XMLInput::addStreamsFromNode(Config &cfg,
                                   std::function<void(EventStream *)> push,
                                   std::string ctx, bool &firstEvent,
                                   std::chrono::nanoseconds &shift,
@@ -206,7 +205,7 @@ void XMLInput::addStreamsFromNode(Output &output,
       DOMNode *lnode = nodes->item(nodeIdx);
       for (XMLCh *attrTag : attrTags)
         lctx += comma + getAttrVal(lnode->getAttributes(), attrTag);
-      addStreamsFromNode(output, push, lctx, firstEvent, shift, str, lnode);
+      addStreamsFromNode(cfg, push, lctx, firstEvent, shift, str, lnode);
     }
     for (XMLCh *attrTag : attrTags) XMLString::release(&attrTag);
     return;
@@ -234,7 +233,7 @@ void XMLInput::addStreamsFromNode(Output &output,
     auto tp = std::chrono::system_clock::from_time_t(std::mktime(&timeBuf));
 
     if (firstEvent) {
-      if (output.tshift) shift = output.start - tp;
+      if (cfg.tshift) shift = cfg.start - tp;
       firstEvent = false;
     }
     tp += shift;
@@ -250,7 +249,7 @@ void XMLInput::addStreamsFromNode(Output &output,
     std::string csv = buf;
     csv += ctx;
     for (XMLCh *attrTag : attrTags) csv += comma + getAttrVal(attrs, attrTag);
-    events.push_back(output.makeEvent(tp, csv));
+    events.push_back(cfg.makeEvent(tp, csv));
   }
   streams.push_back(std::make_unique<ContainerStream>(std::move(events)));
   push(streams.back().get());
