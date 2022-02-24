@@ -5,10 +5,26 @@
 #include <sstream>
 #include <string>
 
+static bool validateSeparator(const char *flag, const std::string &value) {
+  if (value.size() == 1) return true;
+  std::cout << "Parameter " << flag << " expects a single character\n";
+  return false;
+}
+
+// Core parameters.
 DEFINE_string(script, "", "file name for Python script");
 DEFINE_bool(print, false, "print the Python commands and exit");
 DEFINE_string(input, "", "comma-separated list of algorithmic input streams");
 DEFINE_string(output, "print", "comma-separated list of outputs");
+DEFINE_string(separator, ",", "separator for serialization");
+DEFINE_validator(separator, &validateSeparator);
+DEFINE_bool(timeshift, false,
+            "shift time stamps in file inputs to start immediately");
+DEFINE_double(scale, 1.0,
+              "scaling factor for intervals between events, less than 1 "
+              "accelerates delivery");
+
+// IO parameters, sorted alphabetically.
 DEFINE_string(kafka_brokers, "localhost",
               "comma-separated list of kafka brokers");
 DEFINE_string(kafka_ca_file, "", "path to ca file");
@@ -16,11 +32,6 @@ DEFINE_string(kafka_certificate_file, "", "path to certificate file");
 DEFINE_string(kafka_key_file, "", "path to key file");
 DEFINE_string(kafka_key_password, "", "password for the key file");
 DEFINE_string(kafka_topic, "measurements", "topic to send kafka messages as");
-DEFINE_bool(timeshift, false,
-            "shift time stamps in file inputs to start immediately");
-DEFINE_double(scale, 1.0,
-              "scaling factor for intervals between events, less than 1 "
-              "accelerates delivery");
 DEFINE_string(xml_ctrl, "patient:id/glucose_level/event:ts:value",
               "what to extract from xml file");
 
@@ -31,7 +42,8 @@ int main(int argc, char **argv) {
 
   std::string cmds("import TurboEvents\n");
   std::string tsArg = FLAGS_timeshift ? "True" : "False";
-  cmds += "t = TurboEvents.TurboEvents(" + tsArg + ")\n";
+  cmds +=
+      "t = TurboEvents.TurboEvents('" + FLAGS_separator + "', " + tsArg + ")\n";
 
   { // Deal with the output flag.
     std::istringstream iss(FLAGS_output);

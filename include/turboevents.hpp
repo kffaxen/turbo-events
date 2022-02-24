@@ -17,7 +17,7 @@ public:
   virtual ~TurboEvents();
 
   /// Create a new TurboEvents object.
-  static std::unique_ptr<TurboEvents> create(bool timeshift);
+  static std::unique_ptr<TurboEvents> create(char separator, bool timeshift);
 
   /// Create an input from the previous calls to addEvent.
   virtual void createContainerInput() = 0;

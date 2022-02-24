@@ -7,11 +7,17 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <variant>
+
+#include "IO/Serializers.hpp"
 
 namespace TurboEvents {
 
 /// Unique for ordering events with identical time.
 extern uint64_t streamNum;
+
+/// Helper for ensuring exhaustive matching in Config::makeEvent().
+template <class> inline constexpr bool alwaysFalseV = false;
 
 /// A type for events with time stamps and string payload.
 struct Event {
@@ -28,24 +34,39 @@ struct Event {
 class Config {
 public:
   /// Constructor
-  Config(std::chrono::system_clock::time_point t, bool timeshift)
-      : start(t), tshift(timeshift) {}
+  Config(char separator, std::chrono::system_clock::time_point t,
+         bool timeshift)
+      : start(t), tshift(timeshift), serializer(JoinFormat(separator)) {}
 
-  /// Make an event with a string payload.
+  /// Serialize arguments and make an event.
+  template <typename... Args>
   std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
-                                   std::string data) const {
-    return std::make_unique<Event>(t, data);
-  }
-  /// Make an event with an int payload.
-  std::unique_ptr<Event> makeEvent(std::chrono::system_clock::time_point t,
-                                   int data) const {
-    return std::make_unique<Event>(t, std::to_string(data));
+                                   Args &&...args) {
+    return std::visit(
+        [&t, &args...](auto &&arg) {
+          // Update this function when adding a new type of serializer.
+          //
+          // This is just an exhaustive switch over all types in the
+          // serializer variant declaration and a catch-all for when
+          // forgetting to update the code. Everything is known
+          // statically so the compiler will optimize this.
+          using T = std::remove_cvref_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, JoinFormat>)
+            return std::make_unique<Event>(
+                t, arg.serialize(std::forward<Args>(args)...));
+          else
+            static_assert(alwaysFalseV<T>, "non-exhaustive visitor!");
+        },
+        serializer);
   }
 
   /// Start time of the system.
   const std::chrono::system_clock::time_point start;
   /// Whether to time shift.
   const bool tshift;
+
+private:
+  std::variant<JoinFormat> serializer; ///< The serializer to use.
 };
 
 /// A class for event streams where the events of the stream are delivered in

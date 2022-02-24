@@ -21,8 +21,8 @@ uint64_t streamNum = 0;
 class TurboEventsImpl : public Config, public TurboEvents {
 public:
   /// Constructor.
-  TurboEventsImpl(bool timeshift)
-      : Config(std::chrono::system_clock::now(), timeshift), outputs(),
+  TurboEventsImpl(char sep, bool timeshift)
+      : Config(sep, std::chrono::system_clock::now(), timeshift), outputs(),
         inputs() {}
   ~TurboEventsImpl() {}
 
@@ -52,7 +52,7 @@ private:
 
 PYBIND11_EMBEDDED_MODULE(TurboEvents, m) {
   py::class_<TurboEventsImpl>(m, "TurboEvents")
-      .def(py::init<bool>())
+      .def(py::init<char, bool>())
       .def("createContainerInput", &TurboEventsImpl::createContainerInput)
       .def("createCountDownInput", &TurboEventsImpl::createCountDownInput)
       .def("createXMLFileInput", &TurboEventsImpl::createXMLFileInput)
@@ -66,8 +66,8 @@ TurboEvents::TurboEvents() {}
 
 TurboEvents::~TurboEvents() = default;
 
-std::unique_ptr<TurboEvents> TurboEvents::create(bool timeshift) {
-  return std::make_unique<TurboEventsImpl>(timeshift);
+std::unique_ptr<TurboEvents> TurboEvents::create(char sep, bool timeshift) {
+  return std::make_unique<TurboEventsImpl>(sep, timeshift);
 }
 
 void TurboEventsImpl::createContainerInput() {
