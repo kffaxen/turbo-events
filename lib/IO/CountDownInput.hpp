@@ -16,7 +16,7 @@ public:
 
   bool generate(Config &cfg) override {
     time += interval;
-    event = cfg.makeEvent(time, n);
+    event = cfg.makeEvent(time, n, n + 1);
     return n-- > 0;
   }
 
