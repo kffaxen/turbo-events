@@ -13,7 +13,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+    foreach(LANG C CXX)
+        set(CMAKE_${LANG}_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    endforeach()
 endif()
 
 option(SANITIZERS "Build with Sanitizers." ON)
