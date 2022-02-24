@@ -85,9 +85,18 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (FLAGS_input.find("countdown") != std::string::npos) {
-    cmds += "t.createCountDownInput(5, 200)\n"
-            "t.createCountDownInput(2, 300)\n";
+  { // Deal with the input flag.
+    std::istringstream iss(FLAGS_input);
+    std::string input;
+    while (std::getline(iss, input, ',')) {
+      if (input == "countdown")
+        cmds += "t.createCountDownInput(5, 200)\n"
+                "t.createCountDownInput(2, 300)\n";
+      else {
+        std::cerr << "Unknown input: " << input << "\n";
+        exit(1);
+      }
+    }
   }
 
   cmds += "t.run(" + std::to_string(FLAGS_scale) + ")\n";
