@@ -15,7 +15,7 @@ set_tests_properties(test_build PROPERTIES FIXTURES_SETUP test_fixture)
 # Each test to run, and their test_fixture to manage dependencies.
 add_test(NAME xml_test
   COMMAND $<TARGET_FILE:turboevents_main>
-            --input="hello,countdown"
+            --input=countdown
             ${TurboEvents_SOURCE_DIR}/test/events1.xml
             ${TurboEvents_SOURCE_DIR}/test/events2.xml)
 set_tests_properties(xml_test PROPERTIES FIXTURES_REQUIRED test_fixture)
@@ -27,7 +27,6 @@ set_tests_properties(container_test PROPERTIES FIXTURES_REQUIRED test_fixture)
 
 add_test(NAME xml_ctrl_test
   COMMAND $<TARGET_FILE:turboevents_main>
-            --input="hello,countdown"
             --xml_ctrl="patient:id/:glucose_level/event:ts:value,patient:id/:meal/event:ts:type:carbs"
             ${TurboEvents_SOURCE_DIR}/test/events1.xml
             ${TurboEvents_SOURCE_DIR}/test/events2.xml
