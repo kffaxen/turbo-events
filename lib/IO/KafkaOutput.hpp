@@ -2,35 +2,29 @@
 #define KAFKAOUTPUT_HPP
 
 #include "turboevents-internal.hpp"
+#include <librdkafka/rdkafkacpp.h>
 #include <string>
 
 namespace TurboEvents {
+
+class DeliveryReportCb;
 
 /// Output object that creates Kafka events
 class KafkaOutput : public Output {
 public:
   /// Constructor.
-  KafkaOutput(std::string broker, std::string caLocation,
-              std::string certLocation, std::string keyLocation,
-              std::string keyPwd, std::string top)
-      : brokers(broker), caLoc(caLocation), certLoc(certLocation),
-        keyLoc(keyLocation), keyPw(keyPwd), topic(top) {}
+  KafkaOutput(std::string brokers, std::string caLoc, std::string certLoc,
+              std::string keyLoc, std::string keyPw, std::string top);
   /// Destructor
-  virtual ~KafkaOutput() override {}
+  virtual ~KafkaOutput() override;
 
   virtual void trigger(Event &e) override;
 
 private:
-  /// The brokers for Kafka.
-  std::string brokers;
-  /// The ca location.
-  std::string caLoc;
-  /// The certificate location.
-  std::string certLoc;
-  /// The key location.
-  std::string keyLoc;
-  /// The key password.
-  std::string keyPw;
+  /// The Kafka producer.
+  RdKafka::Producer *p;
+  /// Internal callback handle.
+  DeliveryReportCb *drCb;
   /// The topic to send the data to.
   std::string topic;
 };

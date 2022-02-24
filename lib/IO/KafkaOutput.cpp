@@ -1,7 +1,5 @@
 #include "KafkaOutput.hpp"
 #include <iostream>
-#include <librdkafka/rdkafkacpp.h>
-#include <string>
 
 namespace TurboEvents {
 
@@ -15,7 +13,10 @@ public:
   }
 };
 
-void KafkaOutput::trigger(Event &e) {
+KafkaOutput::KafkaOutput(std::string brokers, std::string caLoc,
+                         std::string certLoc, std::string keyLoc,
+                         std::string keyPw, std::string top)
+    : topic(top) {
   std::string errstr;
 
   RdKafka::Conf *c = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
@@ -45,19 +46,30 @@ void KafkaOutput::trigger(Event &e) {
     exit(1);
   }
 
-  DeliveryReportCb drCb;
-  if (c->set("dr_cb", &drCb, errstr) != RdKafka::Conf::CONF_OK) {
+  drCb = new DeliveryReportCb();
+  if (c->set("dr_cb", drCb, errstr) != RdKafka::Conf::CONF_OK) {
     std::cerr << errstr << "\n";
     exit(1);
   }
 
-  RdKafka::Producer *p = RdKafka::Producer::create(c, errstr);
+  p = RdKafka::Producer::create(c, errstr);
   if (!p) {
     std::cerr << "Failed to create producer: " << errstr << "\n";
     exit(1);
   }
   delete c;
+}
 
+KafkaOutput::~KafkaOutput() {
+  p->poll(0);
+  p->flush(10 * 1000);
+  if (p->outq_len() > 0)
+    std::cerr << "% " << p->outq_len() << " message(s) were not delivered\n";
+  delete p;
+  delete drCb;
+}
+
+void KafkaOutput::trigger(Event &e) {
 retry:
   RdKafka::ErrorCode err = p->produce(topic, RdKafka::Topic::PARTITION_UA,
                                       RdKafka::Producer::RK_MSG_COPY,
@@ -73,10 +85,6 @@ retry:
     }
   }
   p->poll(0);
-  p->flush(10 * 1000);
-  if (p->outq_len() > 0)
-    std::cerr << "% " << p->outq_len() << " message(s) were not delivered\n";
-  delete p;
 }
 
 } // namespace TurboEvents
