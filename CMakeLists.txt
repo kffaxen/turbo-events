@@ -29,7 +29,7 @@ option(CLANG_TIDY "Run clang-tidy with the compiler." ON)
 
 if(CLANG_TIDY)
     find_program(CLANG_TIDY_EXE_NAME
-        NAMES "clang-tidy-12" "clang-tidy"
+        NAMES "clang-tidy-14" "clang-tidy-12" "clang-tidy"
     )
     if(CLANG_TIDY_EXE_NAME)
         set(CLANG_TIDY_EXE "${CLANG_TIDY_EXE_NAME}")
