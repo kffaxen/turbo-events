@@ -25,4 +25,11 @@ endif()
 find_package(pybind11 REQUIRED)
 target_link_libraries(turboevents PUBLIC pybind11::embed)
 
+if(WIN32)
+    # FIXME: Add stack overflow detection on Windows.
+    # target_sources(turboevents PRIVATE signals-windows.cpp)
+else()
+    target_sources(turboevents PRIVATE signals-unix.cpp)
+endif()
+
 add_subdirectory(IO)

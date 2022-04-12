@@ -62,7 +62,10 @@ PYBIND11_EMBEDDED_MODULE(TurboEvents, m) {
       .def("addEvent", &TurboEventsImpl::addEvent);
 }
 
-TurboEvents::TurboEvents() {}
+TurboEvents::TurboEvents() {
+  void installSegvHandler();
+  installSegvHandler();
+}
 
 TurboEvents::~TurboEvents() = default;
 
