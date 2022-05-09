@@ -49,14 +49,30 @@ jobs:
     # We can build the check target immediately, but building the default
     # target first allows us to see if the CI fails because of the build
     # or the test.
-    - name: Build
+    - name: Build Debug Build
       run: |
         cmake --build ${{github.workspace}}/build --config Debug
-        cmake --build ${{github.workspace}}/build --config Release
 
-    - name: Test
+    - name: Test Debug Build
       run: |
-        cmake --build ${{github.workspace}}/build --config Release --target check
         # Sanitizers/Valgrind needs Python to use the regular malloc.
         export PYTHONMALLOC=malloc
         cmake --build ${{github.workspace}}/build --config Debug --target check
+
+    # Address sanitizer has sanity checks that interferes with CodeQL,
+    # only run CodeQL on release build.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+
+    - name: Build Release Build
+      run: |
+        cmake --build ${{github.workspace}}/build --config Release
+
+    - name: Test Release Build
+      run: |
+        cmake --build ${{github.workspace}}/build --config Release --target check
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
